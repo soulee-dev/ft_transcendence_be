@@ -10,16 +10,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Users {
-  id           Int      @id @default(autoincrement())
-  name     String?   @db.VarChar(100)
-  profile_image String? @db.VarChar(255)
-  friends     Friends[] @relation("Friends_user_id_ToUsers")
-  status  Status?
-  blocked_users BlockedUsers[] @relation("Blocked_user_id_ToUsers")
-  channelUsers ChannelUsers[]
-  chats  Chat[]
+  id             Int            @id @default(autoincrement())
+  name           String?        @db.VarChar(100)
+  profile_image  String?        @db.VarChar(255)
+  status         Status?
+  friends        Friends[]      @relation("Friends_user_id_ToUsers")
+  friendOf       Friends[]      @relation("Friends_friend_id_ToUsers")
+  blocked_users  BlockedUsers[] @relation("Blocked_user_id_ToUsers")
+  channelUsers   ChannelUsers[]
+  chats          Chat[]
 }
 
 enum Status {
@@ -31,8 +31,13 @@ enum Status {
 model Friends {
   id        Int   @id @default(autoincrement())
   user_id   Int
+  friend_id Int
   user      Users @relation(fields: [user_id], references: [id], name: "Friends_user_id_ToUsers")
+  friend    Users @relation(fields: [friend_id], references: [id], name: "Friends_friend_id_ToUsers")
+
+  @@unique([user_id, friend_id])
 }
+
 
 model BlockedUsers {
   id        Int @id @default(autoincrement())
