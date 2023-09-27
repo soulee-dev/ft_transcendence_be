@@ -20,6 +20,8 @@ model Users {
   blocked_users  BlockedUsers[] @relation("Blocked_user_id_ToUsers")
   channelUsers   ChannelUsers[]
   chats          Chat[]
+
+  @@unique([name])
 }
 
 enum Status {
