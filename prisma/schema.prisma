@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Users {
+  id           Int      @id @default(autoincrement())
+  name     String?   @db.VarChar(100)
+  profile_image String? @db.VarChar(255)
+  friends     Friends[] @relation("Friends_user_id_ToUsers")
+  status  Status?
+  blocked_users BlockedUsers[] @relation("Blocked_user_id_ToUsers")
+  channelUsers ChannelUsers[]
+  chats  Chat[]
+}
+
+enum Status {
+  online
+  offline
+  in_game
+}
+
+model Friends {
+  id        Int   @id @default(autoincrement())
+  user_id   Int
+  user      Users @relation(fields: [user_id], references: [id], name: "Friends_user_id_ToUsers")
+}
+
+model BlockedUsers {
+  id        Int @id @default(autoincrement())
+  user_id   Int
+  user      Users @relation(fields: [user_id], references: [id], name: "Blocked_user_id_ToUsers")
+}
+
+model Channels {
+  id             Int             @id @default(autoincrement())
+  password       String          @db.VarChar(25)
+  name           String          @db.VarChar(25)
+  channelOptions ChannelOptions?
+  channelUsers   ChannelUsers[]
+  chats          Chat[]
+}
+
+model ChannelOptions {
+  channel_id Int      @id
+  option     Int?
+  channel    Channels @relation(fields: [channel_id], references: [id])
+}
+
+model ChannelUsers {
+  id         Int      @id @default(autoincrement())
+  channel_id Int
+  user_id    Int
+  channel    Channels @relation(fields: [channel_id], references: [id])
+  user       Users    @relation(fields: [user_id], references: [id])
+}
+
+model Chat {
+  id         Int      @id @default(autoincrement())
+  channel_id Int
+  sent_by_id    Int
+  message    String   @db.Text
+  channel    Channels @relation(fields: [channel_id], references: [id])
+  sent_by       Users    @relation(fields: [sent_by_id], references: [id])
+}
