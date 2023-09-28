@@ -23,4 +23,20 @@ export class FriendsController {
         const reqId = req.user.id;
         return this.friendsService.deleteFriend(reqId, name);
     }
+
+    @Get("/requests")
+    async getFriendRequests(@Req() req) {
+        const reqId = req.user.id;
+        return this.friendsService.getFriendRequests(reqId);
+    }
+
+    @Post("/request/:id/accept")
+    async acceptFriendRequest(@Param('id') id: number) {
+        return this.friendsService.acceptFriendRequest(id);
+    }
+
+    @Post("/request/:id/decline")
+    async declineFriendRequest(@Param('id') id: number) {
+        return this.friendsService.declineFriendRequest(id);
+    }
 }

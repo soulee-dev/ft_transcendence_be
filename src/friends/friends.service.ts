@@ -108,7 +108,7 @@ export class FriendsService {
         }
 
         // Find the unique friendship record
-        const friendship = await this.prisma.friends.findUnique({
+        const friendship1 = await this.prisma.friends.findUnique({
             where: {
                 user_id_friend_id: {
                     user_id: friendId,
@@ -117,13 +117,31 @@ export class FriendsService {
             },
         });
 
-        if (!friendship) {
+        if (!friendship1) {
+            throw new Error(`No friendship found between user ${id} and ${friendName}`);
+        }
+
+        const friendship2 = await this.prisma.friends.findUnique({
+            where: {
+                user_id_friend_id: {
+                    user_id: id,
+                    friend_id: friendId,
+                },
+            },
+        });
+
+        if (!friendship2) {
             throw new Error(`No friendship found between user ${id} and ${friendName}`);
         }
 
         // Delete the unique friendship record
-        return this.prisma.friends.delete({
-            where: { id: friendship.id },
+        return this.prisma.friends.deleteMany({
+            where: {
+                OR: [
+                    { id: friendship1.id },
+                    { id: friendship2.id }
+                ]
+            }
         });
     }
 
