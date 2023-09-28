@@ -1,4 +1,4 @@
-import {Controller, Param, Get, Post, Query} from '@nestjs/common';
+import {Controller, Param, Get, Post, Query, Req} from '@nestjs/common';
 import {FriendsService} from "./friends.service";
 import {PrismaService} from "../prisma/prisma.service";
 
@@ -6,18 +6,21 @@ import {PrismaService} from "../prisma/prisma.service";
 export class FriendsController {
     constructor(private readonly friendsService: FriendsService) {}
 
-    @Get("/:id")
-    async getFriends(@Param('id') id: number) {
-        return this.friendsService.getFriends(id);
+    @Get()
+    async getFriends(@Req() req) {
+        const reqId = req.user.id;
+        return this.friendsService.getFriends(reqId);
     }
 
-    @Post("/:id/add")
-    async addFriend(@Param('id') id: number, @Query('name') name: string) {
-        return this.friendsService.addFriend(id, name);
+    @Post("/add")
+    async addFriend(@Query('name') name: string, @Req() req) {
+        const reqId = req.user.id;
+        return this.friendsService.addFriend(reqId, name);
     }
 
-    @Post("/:id/delete")
-    async deleteFriend(@Param('id') id: number, @Query('name') name: string) {
-        return this.friendsService.deleteFriend(id, name);
+    @Post("/delete")
+    async deleteFriend(@Query('name') name: string, @Req() req) {
+        const reqId = req.user.id;
+        return this.friendsService.deleteFriend(reqId, name);
     }
 }

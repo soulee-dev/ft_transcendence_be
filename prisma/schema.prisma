@@ -20,9 +20,12 @@ model Users {
   blocked_users  BlockedUsers[] @relation("Blocked_user_id_ToUsers")
   channelUsers   ChannelUsers[]
   chats          Chat[]
+  sentRequests   FriendRequests[] @relation("FriendRequests_sender_id_ToUsers")
+  receivedRequests FriendRequests[] @relation("FriendRequests_receiver_id_ToUsers")
 
   @@unique([name])
 }
+
 
 enum Status {
   online
@@ -38,6 +41,23 @@ model Friends {
   friend    Users @relation(fields: [friend_id], references: [id], name: "Friends_friend_id_ToUsers")
 
   @@unique([user_id, friend_id])
+}
+
+model FriendRequests {
+  id          Int                   @id @default(autoincrement())
+  sender_id   Int
+  receiver_id Int
+  status      FriendRequestStatus
+  sender      Users                 @relation(fields: [sender_id], references: [id], name: "FriendRequests_sender_id_ToUsers")
+  receiver    Users                 @relation(fields: [receiver_id], references: [id], name: "FriendRequests_receiver_id_ToUsers")
+
+  @@unique([sender_id, receiver_id])
+}
+
+enum FriendRequestStatus {
+  pending
+  accepted
+  declined
 }
 
 

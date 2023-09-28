@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {BadRequestException, Injectable} from '@nestjs/common';
 import {PrismaService} from "../prisma/prisma.service";
 import { NotFoundException } from '@nestjs/common';
 
@@ -13,23 +13,85 @@ export class FriendsService {
         });
     }
 
-    async addFriend(id: number, friendName: string) {
+    async getFriendRequests(id: number) {
+        return this.prisma.friendRequests.findMany({
+            where: {receiver_id: id},
+        });
+    }
+
+    async declineFriendRequest(id: number) {
+        return this.prisma.friendRequests.update({
+            where: {id: id},
+            data: {
+                status: 'declined',
+            },
+        });
+    }
+    async acceptFriendRequest(id: number) {
+        const friendRequest = await this.prisma.friendRequests.findUnique({
+            where: { id: id },
+            select: {
+                sender_id: true,
+                receiver_id: true
+            }
+        });
+
+        if (!friendRequest) {
+            throw new Error('Friend request not found.');
+        }
+
+        const { sender_id, receiver_id } = friendRequest;
+
+        this.prisma.friendRequests.update({
+            where: {id: id},
+            data: {
+                status: 'accepted',
+            },
+        });
+        return this.prisma.friends.createMany({
+            data: [
+                {
+                    user_id: sender_id,
+                    friend_id: receiver_id
+                },
+                {
+                    user_id: receiver_id,
+                    friend_id: sender_id
+                }
+            ]
+        });
+    }
+
+    async addFriend(senderId: number, friendName: string) {
         // Find the friend by name
-        const { id: friendId } = await this.prisma.users.findUnique({
+        const { id: receiverId } = await this.prisma.users.findUnique({
             select: { id: true },
             where: { name: friendName },
         }) || {};
 
-        if (!friendId) {
+        if (!receiverId) {
             throw new NotFoundException(`No user found with the name: ${friendName}`);
         }
+        const existingRequest = await this.prisma.friendRequests.findUnique({
+            where: {
+                sender_id_receiver_id: {
+                    sender_id: senderId,
+                    receiver_id: receiverId,
+                },
+            },
+        });
 
-        // Create the friendship record
-        return this.prisma.friends.create({
+        if (existingRequest) {
+            throw new BadRequestException('Friend request already exists.');
+        }
+
+        // Create the friend request
+        return this.prisma.friendRequests.create({
             data: {
-                user_id: friendId,
-                friend_id: id,
-            }
+                sender_id: senderId,
+                receiver_id: receiverId,
+                status: 'pending',
+            },
         });
     }
 
