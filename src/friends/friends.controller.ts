@@ -6,28 +6,24 @@ import {PrismaService} from "../prisma/prisma.service";
 export class FriendsController {
     constructor(private readonly friendsService: FriendsService) {}
 
-    @Get()
-    async getFriends(@Req() req) {
-        const reqId = req.user.id;
-        return this.friendsService.getFriends(reqId);
+    @Get("/:id")
+    async getFriends(@Param("id") id: number) {
+        return this.friendsService.getFriends(id);
     }
 
-    @Post("/add")
-    async addFriend(@Query('name') name: string, @Req() req) {
-        const reqId = req.user.id;
-        return this.friendsService.addFriend(reqId, name);
+    @Post("/:id/add")
+    async addFriend(@Query('name') name: string, @Param("id") id: number) {
+        return this.friendsService.addFriend(id, name);
     }
 
-    @Post("/delete")
-    async deleteFriend(@Query('name') name: string, @Req() req) {
-        const reqId = req.user.id;
-        return this.friendsService.deleteFriend(reqId, name);
+    @Post("/:id/delete")
+    async deleteFriend(@Query('name') name: string, @Param("id") id: number) {
+        return this.friendsService.deleteFriend(id, name);
     }
 
-    @Get("/requests")
-    async getFriendRequests(@Req() req) {
-        const reqId = req.user.id;
-        return this.friendsService.getFriendRequests(reqId);
+    @Get("/requests/:id")
+    async getFriendRequests(@Param("id") id: number) {
+        return this.friendsService.getFriendRequests(id);
     }
 
     @Post("/request/:id/accept")

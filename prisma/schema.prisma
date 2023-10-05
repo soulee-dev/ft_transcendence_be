@@ -18,6 +18,7 @@ model Users {
   friends        Friends[]      @relation("Friends_user_id_ToUsers")
   friendOf       Friends[]      @relation("Friends_friend_id_ToUsers")
   blocked_users  BlockedUsers[] @relation("Blocked_user_id_ToUsers")
+  blocked_by     BlockedUsers[] @relation("Blocked_by_id_ToUsers")
   channelUsers   ChannelUsers[]
   chats          Chat[]
   sentRequests   FriendRequests[] @relation("FriendRequests_sender_id_ToUsers")
@@ -64,7 +65,11 @@ enum FriendRequestStatus {
 model BlockedUsers {
   id        Int @id @default(autoincrement())
   user_id   Int
+  blocked_by Int
   user      Users @relation(fields: [user_id], references: [id], name: "Blocked_user_id_ToUsers")
+  subject   Users @relation(fields: [blocked_by], references: [id], name: "Blocked_by_id_ToUsers")
+
+  @@unique([user_id, blocked_by])
 }
 
 model Channels {

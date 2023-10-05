@@ -37,6 +37,7 @@ CREATE TABLE "FriendRequests" (
 CREATE TABLE "BlockedUsers" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
+    "blocked_by" INTEGER NOT NULL,
 
     CONSTRAINT "BlockedUsers_pkey" PRIMARY KEY ("id")
 );
@@ -86,6 +87,9 @@ CREATE UNIQUE INDEX "Friends_user_id_friend_id_key" ON "Friends"("user_id", "fri
 -- CreateIndex
 CREATE UNIQUE INDEX "FriendRequests_sender_id_receiver_id_key" ON "FriendRequests"("sender_id", "receiver_id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "BlockedUsers_user_id_blocked_by_key" ON "BlockedUsers"("user_id", "blocked_by");
+
 -- AddForeignKey
 ALTER TABLE "Friends" ADD CONSTRAINT "Friends_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -100,6 +104,9 @@ ALTER TABLE "FriendRequests" ADD CONSTRAINT "FriendRequests_receiver_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "BlockedUsers" ADD CONSTRAINT "BlockedUsers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BlockedUsers" ADD CONSTRAINT "BlockedUsers_blocked_by_fkey" FOREIGN KEY ("blocked_by") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChannelOptions" ADD CONSTRAINT "ChannelOptions_channel_id_fkey" FOREIGN KEY ("channel_id") REFERENCES "Channels"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
