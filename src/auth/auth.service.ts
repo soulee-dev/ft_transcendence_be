@@ -20,6 +20,6 @@ export class AuthService {
             });
         }
         const payload = { user: dbUser.id };
-        return this.jwtService.sign(payload);
+        return this.jwtService.sign(payload, { secret: "this-secret" });
     }
 }
