@@ -15,9 +15,10 @@ import {FriendsService} from "./friends/friends.service";
 import {FriendsController} from "./friends/friends.controller";
 import { ChatModule } from './chat/chat.module';
 import { BlockedModule } from './blocked/blocked.module';
+import { ChannelsModule } from './channels/channels.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, FriendsModule, ChatModule, BlockedModule],
+  imports: [PrismaModule, UsersModule, AuthModule, FriendsModule, ChatModule, BlockedModule, ChannelsModule],
   controllers: [AppController, UsersController, AuthController, FriendsController],
   providers: [AppService, UsersService, PrismaService, AuthService, JwtService, FriendsService],
 })
