@@ -1,6 +1,5 @@
-import { Controller, Param, Get, Post, Query, Req } from '@nestjs/common';
+import { Controller, Param, Get, Post, Query } from '@nestjs/common';
 import { FriendsService } from './friends.service';
-import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('friends')
 export class FriendsController {

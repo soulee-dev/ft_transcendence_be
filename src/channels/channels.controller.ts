@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
-import { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { UserActionDto } from './dto/user-action.dto';

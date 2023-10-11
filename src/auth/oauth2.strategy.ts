@@ -3,6 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-oauth2';
 
+type DoneFunction = (error: Error | null | undefined, user?: any) => void;
+
 @Injectable()
 export class OAuth2Strategy extends PassportStrategy(Strategy, 'oauth2') {
   constructor(private readonly httpService: HttpService) {
@@ -21,7 +23,7 @@ export class OAuth2Strategy extends PassportStrategy(Strategy, 'oauth2') {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: Function,
+    done: DoneFunction,
   ): Promise<any> {
     try {
       const result = await this.httpService

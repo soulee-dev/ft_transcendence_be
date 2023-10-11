@@ -111,6 +111,7 @@ export class ChannelsService {
         ],
       }),
     ]);
+    return { channel, channelInfo };
   }
 
   async createChannel(channelData: CreateChannelDto, userId: number) {
