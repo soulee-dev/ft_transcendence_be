@@ -4,9 +4,9 @@ import { IsEnum, IsNumber } from 'class-validator';
 import { UserAction } from '../enum/user-action.enum';
 
 export class UserActionDto {
-    @IsNumber()
-    userId: number;
+  @IsNumber()
+  userId: number;
 
-    @IsEnum(UserAction)
-    action: UserAction;
+  @IsEnum(UserAction)
+  action: UserAction;
 }

@@ -9,10 +9,10 @@ import { UsersModule } from './users/users.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
-import {JwtService} from "@nestjs/jwt";
+import { JwtService } from '@nestjs/jwt';
 import { FriendsModule } from './friends/friends.module';
-import {FriendsService} from "./friends/friends.service";
-import {FriendsController} from "./friends/friends.controller";
+import { FriendsService } from './friends/friends.service';
+import { FriendsController } from './friends/friends.controller';
 import { ChatModule } from './chat/chat.module';
 import { BlockedModule } from './blocked/blocked.module';
 import { ChannelsModule } from './channels/channels.module';
@@ -20,8 +20,30 @@ import { CronJobsService } from './cron-jobs/cron-jobs.service';
 import { CronJobsModule } from './cron-jobs/cron-jobs.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, FriendsModule, ChatModule, BlockedModule, ChannelsModule, CronJobsModule],
-  controllers: [AppController, UsersController, AuthController, FriendsController],
-  providers: [AppService, UsersService, PrismaService, AuthService, JwtService, FriendsService, CronJobsService],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    AuthModule,
+    FriendsModule,
+    ChatModule,
+    BlockedModule,
+    ChannelsModule,
+    CronJobsModule,
+  ],
+  controllers: [
+    AppController,
+    UsersController,
+    AuthController,
+    FriendsController,
+  ],
+  providers: [
+    AppService,
+    UsersService,
+    PrismaService,
+    AuthService,
+    JwtService,
+    FriendsService,
+    CronJobsService,
+  ],
 })
 export class AppModule {}

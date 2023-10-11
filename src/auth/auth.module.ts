@@ -9,16 +9,16 @@ import { JwtStrategy } from './jwt.strategy';
 import { PrismaModule } from '../prisma/prisma.module'; // Adjust path as necessary
 
 @Module({
-    imports: [
-        JwtModule.register({
-            secret: 'YOUR_SECRET_KEY', // Choose a strong secret key
-            signOptions: { expiresIn: '1h' }, // Token expiration time
-        }),
-        HttpModule,
-        PassportModule,
-        PrismaModule,
-    ],
-    controllers: [AuthController],
-    providers: [AuthService, OAuth2Strategy, JwtStrategy],
+  imports: [
+    JwtModule.register({
+      secret: 'YOUR_SECRET_KEY', // Choose a strong secret key
+      signOptions: { expiresIn: '1h' }, // Token expiration time
+    }),
+    HttpModule,
+    PassportModule,
+    PrismaModule,
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, OAuth2Strategy, JwtStrategy],
 })
 export class AuthModule {}

@@ -1,11 +1,9 @@
-import {IsNumber, IsString} from "class-validator";
+import { IsNumber, IsString } from 'class-validator';
 
 export class SendMessageDto {
+  @IsNumber()
+  readonly sent_by_id: number;
 
-    @IsNumber()
-    readonly sent_by_id: number;
-
-    @IsString()
-    readonly message:    string;
-
+  @IsString()
+  readonly message: string;
 }
