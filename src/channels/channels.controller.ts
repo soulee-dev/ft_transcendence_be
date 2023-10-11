@@ -21,15 +21,25 @@ import {ApiTags} from "@nestjs/swagger";
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   async getPublicChannels() {
     return this.channelsService.getPublicChannels();
   }
-  @Get('/:user_id')
-  async getChannels(@Param('user_id') id: number) {
-    return this.channelsService.getChannelsIn(id);
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/joined')
+  async getChannelsIn(@Req() req: any) {
+    const userId = req.user.id;
+    if (!userId) {
+      throw new UnauthorizedException(
+          'You need to be logged in to create a channel.',
+      );
+    }
+    return this.channelsService.getChannelsIn(userId);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('/:channel_id/users')
   async getChannelUsers(@Param('channel_id') id: number) {
     return this.channelsService.getChannelUsers(id);
