@@ -215,10 +215,10 @@ export class ChannelsService {
           this.prisma.channelOptions.deleteMany({
             where: { channel_id: channelId },
           }),
-          this.prisma.channels.delete({
+          this.prisma.chat.delete({
             where: { id: channelId },
           }),
-          this.prisma.chat.delete({
+          this.prisma.channels.delete({
             where: { id: channelId },
           }),
         ]);
