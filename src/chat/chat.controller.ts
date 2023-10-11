@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
+import {ApiTags} from "@nestjs/swagger";
 
+@ApiTags("chat")
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}

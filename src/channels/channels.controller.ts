@@ -14,7 +14,9 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { UserActionDto } from './dto/user-action.dto';
+import {ApiTags} from "@nestjs/swagger";
 
+@ApiTags("channels")
 @Controller('channels')
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}

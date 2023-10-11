@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { BlockedService } from './blocked.service';
+import {ApiTags} from "@nestjs/swagger";
 
+@ApiTags("blocked")
 @Controller('blocked')
 export class BlockedController {
   constructor(private readonly blockedService: BlockedService) {}

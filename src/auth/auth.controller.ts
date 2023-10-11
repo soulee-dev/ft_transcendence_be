@@ -2,6 +2,9 @@ import { Controller, Get, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
+import {ApiTags} from "@nestjs/swagger";
+
+@ApiTags("auth")
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
