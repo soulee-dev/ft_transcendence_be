@@ -4,6 +4,9 @@ CREATE TYPE "Status" AS ENUM ('online', 'offline', 'in_game');
 -- CreateEnum
 CREATE TYPE "FriendRequestStatus" AS ENUM ('pending', 'accepted', 'declined');
 
+-- CreateEnum
+CREATE TYPE "ChannelOption" AS ENUM ('PUBLIC', 'PRIVATE', 'DM');
+
 -- CreateTable
 CREATE TABLE "Users" (
     "id" SERIAL NOT NULL,
@@ -54,18 +57,35 @@ CREATE TABLE "Channels" (
 -- CreateTable
 CREATE TABLE "ChannelOptions" (
     "channel_id" INTEGER NOT NULL,
-    "option" INTEGER,
+    "option" "ChannelOption",
 
     CONSTRAINT "ChannelOptions_pkey" PRIMARY KEY ("channel_id")
 );
 
 -- CreateTable
 CREATE TABLE "ChannelUsers" (
-    "id" SERIAL NOT NULL,
+    "channel_id" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "admin" BOOLEAN NOT NULL,
+
+    CONSTRAINT "ChannelUsers_pkey" PRIMARY KEY ("user_id","channel_id")
+);
+
+-- CreateTable
+CREATE TABLE "ChannelBans" (
     "channel_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
 
-    CONSTRAINT "ChannelUsers_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ChannelBans_pkey" PRIMARY KEY ("channel_id","user_id")
+);
+
+-- CreateTable
+CREATE TABLE "ChannelMutes" (
+    "channel_id" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "until" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ChannelMutes_pkey" PRIMARY KEY ("channel_id","user_id")
 );
 
 -- CreateTable
@@ -89,6 +109,12 @@ CREATE UNIQUE INDEX "FriendRequests_sender_id_receiver_id_key" ON "FriendRequest
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BlockedUsers_user_id_blocked_by_key" ON "BlockedUsers"("user_id", "blocked_by");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Channels_name_key" ON "Channels"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Chat_channel_id_key" ON "Chat"("channel_id");
 
 -- AddForeignKey
 ALTER TABLE "Friends" ADD CONSTRAINT "Friends_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

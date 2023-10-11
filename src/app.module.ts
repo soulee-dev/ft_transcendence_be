@@ -16,10 +16,12 @@ import {FriendsController} from "./friends/friends.controller";
 import { ChatModule } from './chat/chat.module';
 import { BlockedModule } from './blocked/blocked.module';
 import { ChannelsModule } from './channels/channels.module';
+import { CronJobsService } from './cron-jobs/cron-jobs.service';
+import { CronJobsModule } from './cron-jobs/cron-jobs.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, AuthModule, FriendsModule, ChatModule, BlockedModule, ChannelsModule],
+  imports: [PrismaModule, UsersModule, AuthModule, FriendsModule, ChatModule, BlockedModule, ChannelsModule, CronJobsModule],
   controllers: [AppController, UsersController, AuthController, FriendsController],
-  providers: [AppService, UsersService, PrismaService, AuthService, JwtService, FriendsService],
+  providers: [AppService, UsersService, PrismaService, AuthService, JwtService, FriendsService, CronJobsService],
 })
 export class AppModule {}

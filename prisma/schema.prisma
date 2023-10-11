@@ -79,20 +79,46 @@ model Channels {
   channelOptions ChannelOptions?
   channelUsers   ChannelUsers[]
   chats          Chat[]
+  @@unique([name])
+}
+
+enum ChannelOption {
+  PUBLIC
+  PRIVATE
+  DM
 }
 
 model ChannelOptions {
-  channel_id Int      @id
-  option     Int?
+  channel_id Int
+  option     ChannelOption?
   channel    Channels @relation(fields: [channel_id], references: [id])
+
+  @@id([channel_id])
 }
 
 model ChannelUsers {
-  id         Int      @id @default(autoincrement())
   channel_id Int
   user_id    Int
+  admin      Boolean
   channel    Channels @relation(fields: [channel_id], references: [id])
   user       Users    @relation(fields: [user_id], references: [id])
+
+  @@id([user_id, channel_id])
+}
+
+model ChannelBans {
+  channel_id Int
+  user_id    Int
+
+  @@id([channel_id, user_id])
+}
+
+model ChannelMutes {
+  channel_id Int
+  user_id    Int
+  until      DateTime
+
+  @@id([channel_id, user_id])
 }
 
 model Chat {
@@ -102,4 +128,6 @@ model Chat {
   message    String   @db.Text
   channel    Channels @relation(fields: [channel_id], references: [id])
   sent_by       Users    @relation(fields: [sent_by_id], references: [id])
+
+  @@unique([channel_id])
 }

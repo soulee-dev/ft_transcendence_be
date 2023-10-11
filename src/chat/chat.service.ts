@@ -13,6 +13,27 @@ export class ChatService {
     }
 
     async sendMessage(id: number, messageData: SendMessageDto) {
+        const senderId = messageData.sent_by_id;
+        const user = await this.prisma.channelUsers.findUnique({
+            where: {
+                user_id_channel_id: {
+                    user_id: senderId,
+                    channel_id: id,
+                }
+            }
+        })
+        if (!user)
+            return ; //you are not in channel
+        const mute = await this.prisma.channelMutes.findUnique({
+            where: {
+                channel_id_user_id: {
+                    channel_id: id,
+                    user_id: senderId,
+                }
+            }
+        })
+        if (mute)
+            return ; // you are muted
         return this.prisma.chat.create({
             data: {
                 channel_id: id,
