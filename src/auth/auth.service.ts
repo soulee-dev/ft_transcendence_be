@@ -20,9 +20,9 @@ export class AuthService {
         },
       });
     }
-    const payload = { user: dbUser.id };
+    const payload = { sub: dbUser.id };
     // TODO: It should be initialized in .env
     // TODO: It should be removed in further version
-    return this.jwtService.sign(payload, { secret: 'this-secret' });
+    return this.jwtService.sign(payload);
   }
 }

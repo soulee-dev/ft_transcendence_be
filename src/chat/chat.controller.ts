@@ -1,21 +1,43 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, UseGuards} from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
-import {ApiTags} from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse
+} from "@nestjs/swagger";
+import {AuthGuard} from "@nestjs/passport";
 
 @ApiTags("chat")
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Get('/:id')
-  async getChat(@Param('id') id: number) {
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:channel_id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve chat messages from a channel' })
+  @ApiResponse({ status: 200, description: 'Chat messages retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
+  async getChat(@Param('channel_id') id: number) {
     return this.chatService.getChat(id);
   }
 
-  @Post('/:id')
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/:channel_id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Send a message to a channel' })
+  @ApiResponse({ status: 201, description: 'Message sent successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
+  @ApiBody({ type: SendMessageDto })
   async sendMessage(
-    @Param('id') id: number,
+    @Param('channel_id') id: number,
     @Body() messageData: SendMessageDto,
   ) {
     return this.chatService.sendMessage(id, messageData);

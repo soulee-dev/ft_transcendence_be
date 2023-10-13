@@ -1,7 +1,7 @@
 export enum UserAction {
-  Kick = 'kick',
-  Ban = 'ban',
-  Mute = 'mute',
-  GiveAdmin = 'give_admin',
-  UnBan = 'unban',
+  Kick = 'KICK',
+  Ban = 'BAN',
+  Mute = 'MUTE',
+  GiveAdmin = 'GIVEADMIN',
+  UnBan = 'UNBAN',
 }
