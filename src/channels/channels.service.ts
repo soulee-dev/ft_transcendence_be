@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelOptions } from './enum/channel-options.enum';
@@ -9,13 +9,14 @@ import { addMinutes } from 'date-fns';
 
 @Injectable()
 export class ChannelsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+  }
 
   async getPublicChannels() {
     try {
       const channelsId = await this.prisma.channelOptions.findMany({
-        select: { channel_id: true },
-        where: { option: ChannelOptions.Public },
+        select: {channel_id: true},
+        where: {option: ChannelOptions.Public},
       });
 
       const channelIds = channelsId.map((channel) => channel.channel_id);
@@ -30,14 +31,15 @@ export class ChannelsService {
       return channels;
     } catch (error) {
       console.error('Error getting channels:', error);
-      throw error;
+      throw new HttpException('Failed to retrieve public channels', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
   async getChannelsIn(user_id: number) {
     try {
       const channelsId = await this.prisma.channelUsers.findMany({
-        select: { channel_id: true },
-        where: { user_id: user_id },
+        select: {channel_id: true},
+        where: {user_id: user_id},
       });
 
       const channelIds = channelsId.map((channel) => channel.channel_id);
@@ -52,70 +54,80 @@ export class ChannelsService {
       return channels;
     } catch (error) {
       console.error('Error getting channels:', error);
-      throw error;
+      throw new HttpException('Failed to retrieve channels for the user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   async getChannelUsers(channel_id: number) {
     try {
       const channelUsers = await this.prisma.channelUsers.findMany({
-        where: { channel_id: channel_id },
+        where: {channel_id: channel_id},
       });
       return channelUsers;
     } catch (error) {
       console.error('Error getting channelUsers', error);
-      throw error;
+      throw new HttpException('Failed to retrieve users for the channel', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   async createDMChannel(userId: number, creatorId: number) {
-    const user = await this.prisma.users.findUnique({
-      select: { name: true },
-      where: {
-        id: userId,
-      },
-    });
-    if (!user) return; // undefined user
-    const creator = await this.prisma.users.findUnique({
-      select: { name: true },
-      where: {
-        id: creatorId,
-      },
-    });
-    const channel = await this.prisma.channels.create({
-      data: {
-        name: creator.name + ', ' + user.name,
-        password: null,
-      },
-    });
-
-    const channelInfo = await this.prisma.$transaction([
-      this.prisma.channelOptions.create({
-        data: {
-          channel_id: channel.id,
-          option: ChannelOptions.Dm,
+    try {
+      const user = await this.prisma.users.findUnique({
+        select: {name: true},
+        where: {
+          id: userId,
         },
-      }),
-      this.prisma.channelUsers.createMany({
-        data: [
-          {
+      });
+      if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+      const creator = await this.prisma.users.findUnique({
+        select: {name: true},
+        where: {
+          id: creatorId,
+        },
+      });
+      if (!creator) throw new HttpException('Creator not found', HttpStatus.NOT_FOUND);
+
+      const channel = await this.prisma.channels.create({
+        data: {
+          name: creator.name + ', ' + user.name,
+          password: null,
+        },
+      });
+
+      const channelInfo = await this.prisma.$transaction([
+        this.prisma.channelOptions.create({
+          data: {
             channel_id: channel.id,
-            user_id: userId,
-            admin: false,
+            option: ChannelOptions.Dm,
           },
-          {
-            channel_id: channel.id,
-            user_id: creatorId,
-            admin: false,
-          },
-        ],
-      }),
-    ]);
-    return { channel, channelInfo };
+        }),
+        this.prisma.channelUsers.createMany({
+          data: [
+            {
+              channel_id: channel.id,
+              user_id: userId,
+              admin: false,
+            },
+            {
+              channel_id: channel.id,
+              user_id: creatorId,
+              admin: false,
+            },
+          ],
+        }),
+      ]);
+      return {channel, channelInfo};
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      console.error('Error creating DM channel:', error);
+      throw new HttpException('Failed to create DM channel', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
+
   async createChannel(channelData: CreateChannelDto, userId: number) {
-    const { name, password, option, users } = channelData;
+    const {name, password, option, users} = channelData;
 
     try {
       // Check if all user names are valid
@@ -128,7 +140,7 @@ export class ChannelsService {
       });
 
       if (invitedUsers.length !== users.length) {
-        throw new Error('Some users not found');
+        throw new HttpException('Some users not found', HttpStatus.NOT_FOUND);
       }
 
       // Transaction 1: Create the channel
@@ -168,6 +180,8 @@ export class ChannelsService {
         channelInfo,
       };
     } catch (error) {
+      if (error instanceof HttpException) throw error;
+
       // Log error details for debugging
       console.error('Error creating channel:', error);
 
@@ -176,7 +190,7 @@ export class ChannelsService {
       // - Return a failure status/object, or
       // - Throw a different error, etc.
 
-      throw new Error('Failed to create channel');
+      throw new HttpException('Failed to create channel', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -188,7 +202,9 @@ export class ChannelsService {
           channel_id: channelId,
         },
       });
-      if (channelOption.option === ChannelOptions.Dm) return; // you cannot leave DM
+      if (channelOption.option === ChannelOptions.Dm)
+        throw new HttpException("You cannot leave a DM", HttpStatus.BAD_REQUEST);
+// you cannot leave DM
       await this.prisma.channelUsers.delete({
         where: {
           // Use appropriate condition to identify the user-channel relationship
@@ -210,30 +226,32 @@ export class ChannelsService {
       if (remainingUsers.length === 0) {
         await this.prisma.$transaction([
           this.prisma.channelUsers.deleteMany({
-            where: { channel_id: channelId },
+            where: {channel_id: channelId},
           }),
           this.prisma.channelOptions.deleteMany({
-            where: { channel_id: channelId },
+            where: {channel_id: channelId},
           }),
           this.prisma.chat.delete({
-            where: { id: channelId },
+            where: {id: channelId},
           }),
           this.prisma.channels.delete({
-            where: { id: channelId },
+            where: {id: channelId},
           }),
         ]);
       }
     } catch (error) {
+      if (error instanceof HttpException) throw error;
+
       // Handle errors (e.g., log them and/or throw an exception)
       console.error(error);
-      throw new Error('Failed to handle user departure');
+      throw new HttpException('Failed to handle user departure', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   async updateChannel(
-    channelId: number,
-    userId: number,
-    updateData: UpdateChannelDto,
+      channelId: number,
+      userId: number,
+      updateData: UpdateChannelDto,
   ) {
     const user = await this.prisma.channelUsers.findUnique({
       where: {
@@ -243,98 +261,124 @@ export class ChannelsService {
         },
       },
     });
-    if (user.admin === false) return; //error: you are not admin
+    if (user.admin === false)
+      throw new HttpException("You are not an admin", HttpStatus.FORBIDDEN); //error: you are not admin
 
     const channelOption = await this.prisma.channelOptions.findUnique({
       where: {
         channel_id: channelId,
       },
     });
-    if (channelOption.option === ChannelOptions.Dm) return; // cannot change DM option
-    if (updateData.option === ChannelOptions.Dm) return; //error
+    if (channelOption.option === ChannelOptions.Dm || updateData.option === ChannelOptions.Dm)
+      throw new HttpException("Cannot change DM option", HttpStatus.BAD_REQUEST); // cannot change DM option
     try {
       const updatedChannel = await this.prisma.channels.update({
-        where: { id: channelId },
+        where: {id: channelId},
         data: updateData,
       });
 
       return updatedChannel;
     } catch (error) {
+      if (error instanceof HttpException) throw error;
+
       // Handle errors appropriately
       console.error(error);
-      throw new Error('Failed to update channel');
+      throw new HttpException('Failed to update channel', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   async manageChannel(
-    channelId: number,
-    adminId: number,
-    managementData: UserActionDto,
+      channelId: number,
+      adminId: number,
+      managementData: UserActionDto,
   ) {
-    const channelOption = await this.prisma.channelOptions.findUnique({
-      where: {
-        channel_id: channelId,
-      },
-    });
-    if (channelOption.option === ChannelOptions.Dm) return; //DM cannot be updated
-    const admin = await this.prisma.channelUsers.findUnique({
-      where: {
-        user_id_channel_id: {
-          user_id: adminId,
+    try {
+      const channelOption = await this.prisma.channelOptions.findUnique({
+        where: {
           channel_id: channelId,
         },
-      },
-    });
-    if (admin.admin === false) return; //error: you are not admin
-    const { userId, action } = managementData;
-    const user = await this.prisma.channelUsers.findUnique({
-      where: {
-        user_id_channel_id: {
-          user_id: userId,
-          channel_id: channelId,
+      });
+      if (channelOption.option === ChannelOptions.Dm)
+        throw new HttpException("DM cannot be updated", HttpStatus.BAD_REQUEST);
+
+      const admin = await this.prisma.channelUsers.findUnique({
+        where: {
+          user_id_channel_id: {
+            user_id: adminId,
+            channel_id: channelId,
+          },
         },
-      },
-    });
-    if (!user) return; //error user is not in channel
-    if (action === UserAction.GiveAdmin) {
-      return this.prisma.channelUsers.update({
+      });
+      if (!admin || admin.admin === false)
+        throw new HttpException("You are not an admin", HttpStatus.FORBIDDEN);
+
+      const {userId, action} = managementData;
+      const user = await this.prisma.channelUsers.findUnique({
         where: {
           user_id_channel_id: {
             user_id: userId,
             channel_id: channelId,
           },
         },
-        data: {
-          admin: true,
-        },
       });
-    }
-    if (action === UserAction.Kick) {
-      return this.handleUserDeparture(channelId, userId);
-    }
-    if (action === UserAction.Ban) {
-      this.handleUserDeparture(channelId, userId);
-      return this.prisma.channelBans.create({
-        data: {
-          channel_id: channelId,
-          user_id: userId,
-        },
-      });
-    }
-    if (action === UserAction.Mute) {
-      const until = addMinutes(new Date(), 180);
+      if (!user)
+        throw new HttpException("User is not in channel", HttpStatus.NOT_FOUND);
+      if (action === UserAction.GiveAdmin) {
+        return this.prisma.channelUsers.update({
+          where: {
+            user_id_channel_id: {
+              user_id: userId,
+              channel_id: channelId,
+            },
+          },
+          data: {
+            admin: true,
+          },
+        });
+      }
+      if (action === UserAction.Kick) {
+        return this.handleUserDeparture(channelId, userId);
+      }
+      if (action === UserAction.Ban) {
+        this.handleUserDeparture(channelId, userId);
+        return this.prisma.channelBans.create({
+          data: {
+            channel_id: channelId,
+            user_id: userId,
+          },
+        });
+      }
+      if (action === UserAction.Mute) {
+        const until = addMinutes(new Date(), 180);
 
-      // Store the mute in the database with the expiration time
-      return this.prisma.channelMutes.create({
-        data: {
-          channel_id: channelId,
-          user_id: userId,
-          until: until,
-        },
-      });
+        // Store the mute in the database with the expiration time
+        return this.prisma.channelMutes.create({
+          data: {
+            channel_id: channelId,
+            user_id: userId,
+            until: until,
+          },
+        });
+      }
+      if (action === UserAction.UnBan) {
+        return this.prisma.channelBans.delete({
+          where: {
+            channel_id_user_id: {
+              channel_id: channelId,
+              user_id: userId,
+            },
+          },
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      throw new HttpException("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    if (action === UserAction.UnBan) {
-      return this.prisma.channelBans.delete({
+  }
+
+  async joinPublicChannel(channelId: number, userId: number, password: string) {
+    try {
+      const banned = await this.prisma.channelBans.findUnique({
         where: {
           channel_id_user_id: {
             channel_id: channelId,
@@ -342,56 +386,69 @@ export class ChannelsService {
           },
         },
       });
+      if (banned)
+        throw new HttpException("You are banned", HttpStatus.FORBIDDEN);
+
+      const channel = await this.prisma.channels.findUnique({
+        where: {
+          id: channelId,
+        },
+      });
+      if (channel.password !== password)
+        throw new HttpException("Incorrect password", HttpStatus.BAD_REQUEST);
+
+      return this.prisma.channelUsers.create({
+        data: {
+          channel_id: channelId,
+          user_id: userId,
+          admin: false,
+        },
+      });
+
+    } catch (error) {
+      console.error(error);
+      throw new HttpException("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  async joinPublicChannel(channelId: number, userId: number, password: string) {
-    const banned = await this.prisma.channelBans.findUnique({
-      where: {
-        channel_id_user_id: {
-          channel_id: channelId,
-          user_id: userId,
-        },
-      },
-    });
-    if (banned) return; // you are banned
-    const channel = await this.prisma.channels.findUnique({
-      where: {
-        id: channelId,
-      },
-    });
-    if (channel.password !== password) return; // password wrong
-    return this.prisma.channelUsers.create({
-      data: {
-        channel_id: channelId,
-        user_id: userId,
-        admin: false,
-      },
-    });
-  }
-
   async joinPrivateChannel(userId: number, password: string, name: string) {
-    const channel = await this.prisma.channels.findUnique({
-      where: {
-        name: name,
-      },
-    });
-    const banned = await this.prisma.channelBans.findUnique({
-      where: {
-        channel_id_user_id: {
+    try {
+      const channel = await this.prisma.channels.findUnique({
+        where: {
+          name: name,
+        },
+      });
+      if (!channel) {
+        throw new HttpException("Channel not found", HttpStatus.NOT_FOUND);
+      }
+
+      const banned = await this.prisma.channelBans.findUnique({
+        where: {
+          channel_id_user_id: {
+            channel_id: channel.id,
+            user_id: userId,
+          },
+        },
+      });
+      if (banned) {
+        throw new HttpException("You are banned", HttpStatus.FORBIDDEN);
+      }
+
+      if (channel.password !== password) {
+        throw new HttpException("Incorrect password", HttpStatus.BAD_REQUEST);
+      }
+
+      return this.prisma.channelUsers.create({
+        data: {
           channel_id: channel.id,
           user_id: userId,
+          admin: false,
         },
-      },
-    });
-    if (banned) return; // you are banned
-    if (channel.password !== password) return; // password wrong
-    return this.prisma.channelUsers.create({
-      data: {
-        channel_id: channel.id,
-        user_id: userId,
-        admin: false,
-      },
-    });
+      });
+
+    } catch (error) {
+      console.error(error);
+      throw new HttpException("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

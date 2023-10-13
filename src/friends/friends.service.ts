@@ -1,148 +1,165 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class FriendsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getFriends(id: number) {
-    return this.prisma.friends.findMany({
-      where: { friend_id: id },
-    });
+    try {
+      return await this.prisma.friends.findMany({
+        where: { friend_id: id },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException(`Failed to get friends for user ${id}`);
+    }
   }
 
   async getFriendRequests(id: number) {
-    return this.prisma.friendRequests.findMany({
-      where: { receiver_id: id },
-    });
+    try {
+      return await this.prisma.friendRequests.findMany({
+        where: { receiver_id: id },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException(`Failed to get friend requests for user ${id}`);
+    }
   }
 
   async declineFriendRequest(id: number) {
-    return this.prisma.friendRequests.update({
-      where: { id: id },
-      data: {
-        status: 'declined',
-      },
-    });
-  }
-  async acceptFriendRequest(id: number) {
-    const friendRequest = await this.prisma.friendRequests.findUnique({
-      where: { id: id },
-      select: {
-        sender_id: true,
-        receiver_id: true,
-      },
-    });
-
-    if (!friendRequest) {
-      throw new Error('Friend request not found.');
+    try {
+      return await this.prisma.friendRequests.update({
+        where: { id: id },
+        data: {
+          status: 'declined',
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException(`Failed to decline friend request ${id}`);
     }
+  }
 
-    const { sender_id, receiver_id } = friendRequest;
+  async acceptFriendRequest(id: number) {
+    try {
+      const friendRequest = await this.prisma.friendRequests.findUnique({
+        where: { id: id },
+        select: {
+          sender_id: true,
+          receiver_id: true,
+        },
+      });
 
-    this.prisma.friendRequests.update({
-      where: { id: id },
-      data: {
-        status: 'accepted',
-      },
-    });
-    return this.prisma.friends.createMany({
-      data: [
-        {
-          user_id: sender_id,
-          friend_id: receiver_id,
+      if (!friendRequest) {
+        throw new NotFoundException('Friend request not found.');
+      }
+
+      const { sender_id, receiver_id } = friendRequest;
+
+      await this.prisma.friendRequests.update({
+        where: { id: id },
+        data: {
+          status: 'accepted',
         },
-        {
-          user_id: receiver_id,
-          friend_id: sender_id,
-        },
-      ],
-    });
+      });
+
+      return await this.prisma.friends.createMany({
+        data: [
+          {
+            user_id: sender_id,
+            friend_id: receiver_id,
+          },
+          {
+            user_id: receiver_id,
+            friend_id: sender_id,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(`Failed to accept friend request ${id}`);
+    }
   }
 
   async addFriend(senderId: number, friendName: string) {
-    // Find the friend by name
-    const { id: receiverId } =
-      (await this.prisma.users.findUnique({
+    try {
+      const { id: receiverId } = await this.prisma.users.findUnique({
         select: { id: true },
         where: { name: friendName },
-      })) || {};
+      }) || {};
 
-    if (!receiverId) {
-      throw new NotFoundException(`No user found with the name: ${friendName}`);
-    }
-    const existingRequest = await this.prisma.friendRequests.findUnique({
-      where: {
-        sender_id_receiver_id: {
+      if (!receiverId) {
+        throw new NotFoundException(`No user found with the name: ${friendName}`);
+      }
+
+      const existingRequest = await this.prisma.friendRequests.findUnique({
+        where: {
+          sender_id_receiver_id: {
+            sender_id: senderId,
+            receiver_id: receiverId,
+          },
+        },
+      });
+
+      if (existingRequest) {
+        throw new BadRequestException('Friend request already exists.');
+      }
+
+      return await this.prisma.friendRequests.create({
+        data: {
           sender_id: senderId,
           receiver_id: receiverId,
+          status: 'pending',
         },
-      },
-    });
-
-    if (existingRequest) {
-      throw new BadRequestException('Friend request already exists.');
+      });
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(`Failed to add friend ${friendName}`);
     }
-
-    // Create the friend request
-    return this.prisma.friendRequests.create({
-      data: {
-        sender_id: senderId,
-        receiver_id: receiverId,
-        status: 'pending',
-      },
-    });
   }
 
   async deleteFriend(id: number, friendName: string) {
-    // Find the friend by name
-    const { id: friendId } =
-      (await this.prisma.users.findUnique({
+    try {
+      const { id: friendId } = await this.prisma.users.findUnique({
         select: { id: true },
         where: { name: friendName },
-      })) || {};
+      }) || {};
 
-    if (!friendId) {
-      throw new NotFoundException(`No user found with the name: ${friendName}`);
-    }
+      if (!friendId) {
+        throw new NotFoundException(`No user found with the name: ${friendName}`);
+      }
 
-    // Find the unique friendship record
-    const friendship1 = await this.prisma.friends.findUnique({
-      where: {
-        user_id_friend_id: {
-          user_id: friendId,
-          friend_id: id,
+      const friendship1 = await this.prisma.friends.findUnique({
+        where: {
+          user_id_friend_id: {
+            user_id: friendId,
+            friend_id: id,
+          },
         },
-      },
-    });
+      });
 
-    if (!friendship1) {
-      throw new Error(
-        `No friendship found between user ${id} and ${friendName}`,
-      );
-    }
-
-    const friendship2 = await this.prisma.friends.findUnique({
-      where: {
-        user_id_friend_id: {
-          user_id: id,
-          friend_id: friendId,
+      const friendship2 = await this.prisma.friends.findUnique({
+        where: {
+          user_id_friend_id: {
+            user_id: id,
+            friend_id: friendId,
+          },
         },
-      },
-    });
+      });
 
-    if (!friendship2) {
-      throw new Error(
-        `No friendship found between user ${id} and ${friendName}`,
-      );
+      if (!friendship1 || !friendship2) {
+        throw new NotFoundException(`No friendship found between user ${id} and ${friendName}`);
+      }
+
+      return await this.prisma.friends.deleteMany({
+        where: {
+          OR: [{ id: friendship1.id }, { id: friendship2.id }],
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(`Failed to delete friend ${friendName}`);
     }
-
-    // Delete the unique friendship record
-    return this.prisma.friends.deleteMany({
-      where: {
-        OR: [{ id: friendship1.id }, { id: friendship2.id }],
-      },
-    });
   }
 }
