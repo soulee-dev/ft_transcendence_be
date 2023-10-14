@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Users {
-  id             Int            @id @default(autoincrement())
+  id             Int            @id
   name           String?        @db.VarChar(100)
   profile_image  String?        @db.VarChar(255)
   status         Status?
@@ -23,8 +23,6 @@ model Users {
   chats          Chat[]
   sentRequests   FriendRequests[] @relation("FriendRequests_sender_id_ToUsers")
   receivedRequests FriendRequests[] @relation("FriendRequests_receiver_id_ToUsers")
-
-  @@unique([name])
 }
 
 

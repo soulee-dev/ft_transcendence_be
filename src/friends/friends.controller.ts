@@ -23,8 +23,8 @@ export class FriendsController {
   @ApiResponse({ status: 200, description: 'Retrieve all friends successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getFriends(@Req() req) {
-    const userId = req.user.id
-    return this.friendsService.getFriends(userId);
+    const id = req.user.id
+    return this.friendsService.getFriends(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -35,8 +35,8 @@ export class FriendsController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiQuery({ name: 'name', description: 'Name of the friend to add' })
   async addFriend(@Query('name') name: string, @Req() req) {
-    const userId = req.user.id;
-    return this.friendsService.addFriend(userId, name);
+    const id = req.user.id;
+    return this.friendsService.addFriend(id, name);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -47,8 +47,8 @@ export class FriendsController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiQuery({ name: 'name', description: 'Name of the friend to delete' })
   async deleteFriend(@Query('name') name: string, @Req() req) {
-    const userId = req.user.id;
-    return this.friendsService.deleteFriend(userId, name);
+    const id = req.user.id;
+    return this.friendsService.deleteFriend(id, name);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -58,8 +58,8 @@ export class FriendsController {
   @ApiResponse({ status: 200, description: 'Retrieve all friend requests successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getFriendRequests(@Req() req) {
-    const userId = req.user.id;
-    return this.friendsService.getFriendRequests(userId);
+    const id = req.user.id;
+    return this.friendsService.getFriendRequests(id);
   }
 
   @UseGuards(AuthGuard('jwt'))

@@ -13,6 +13,7 @@ export class AuthService {
     let dbUser = await this.prisma.users.findUnique({
       where: { id: user.id },
     });
+    // TODO: Add additional infos about user
     if (!dbUser) {
       dbUser = await this.prisma.users.create({
         data: {
@@ -23,6 +24,6 @@ export class AuthService {
     const payload = { sub: dbUser.id };
     // TODO: It should be initialized in .env
     // TODO: It should be removed in further version
-    return this.jwtService.sign(payload);
+    return this.jwtService.sign(payload, {secret: 'YOUR_SECRET_KEY'});
   }
 }

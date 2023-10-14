@@ -10,7 +10,7 @@ export class UserActionDto {
     example: 1
   })
   @IsNumber()
-  userId: number;
+  id: number;
 
   @ApiProperty({
     enum: UserAction,

@@ -23,8 +23,8 @@ export class BlockedController {
   @ApiResponse({ status: 200, description: 'Retrieve blocked users successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getBlockedUser(@Req() req) {
-    const userId = req.user.id;
-    return this.blockedService.getBlockedUser(userId);
+    const id = req.user.id;
+    return this.blockedService.getBlockedUser(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -35,8 +35,8 @@ export class BlockedController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiQuery({ name: 'name', description: 'Name of the user to block' })
   async blockUser(@Req() req, @Query('name') name: string) {
-    const userId = req.user.id;
-    return this.blockedService.blockUser(userId, name);
+    const id = req.user.id;
+    return this.blockedService.blockUser(id, name);
   }
 
   @UseGuards(AuthGuard('jwt'))

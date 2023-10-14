@@ -36,13 +36,13 @@ export class ChannelsController {
   @ApiOperation({ summary: 'Retrieve joined channels' })
   @ApiResponse({ status: 200, description: 'joined channels retrieved successfully' })
   async getChannelsIn(@Req() req: any) {
-    const userId = req.user.id;
-    if (!userId) {
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
           'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.getChannelsIn(userId);
+    return this.channelsService.getChannelsIn(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -82,13 +82,14 @@ export class ChannelsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBody({ type: CreateChannelDto })
   async createChannel(@Body() channelData: CreateChannelDto, @Req() req: any) {
-    const userId = req.user.id;
-    if (!userId) {
+    console.log(req.user.id);
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
         'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.createChannel(channelData, userId);
+    return this.channelsService.createChannel(channelData, id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -99,13 +100,13 @@ export class ChannelsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiParam({ name: 'channel_id', description: 'ID of the channel to leave' })
   async leaveChannel(@Param('channel_id') channel_id: number, @Req() req: any) {
-    const userId = req.user.id;
-    if (!userId) {
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
         'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.handleUserDeparture(channel_id, userId);
+    return this.channelsService.handleUserDeparture(channel_id, id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -122,13 +123,13 @@ export class ChannelsController {
     @Req() req: any,
     @Body() updateData: UpdateChannelDto,
   ) {
-    const userId = req.user.id;
-    if (!userId) {
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
         'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.updateChannel(channel_id, userId, updateData);
+    return this.channelsService.updateChannel(channel_id, id, updateData);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -144,15 +145,15 @@ export class ChannelsController {
     @Req() req: any,
     @Body() managementData: UserActionDto,
   ) {
-    const userId = req.user.id;
-    if (!userId) {
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
         'You need to be logged in to create a channel.',
       );
     }
     return this.channelsService.manageChannel(
       channel_id,
-      userId,
+      id,
       managementData,
     );
   }
@@ -171,13 +172,13 @@ export class ChannelsController {
     @Req() req: any,
     @Query('password') password: string,
   ) {
-    const userId = req.user.id;
-    if (!userId) {
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
         'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.joinPublicChannel(channel_id, userId, password);
+    return this.channelsService.joinPublicChannel(channel_id, id, password);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -194,12 +195,12 @@ export class ChannelsController {
     @Query('password') password: string,
     @Query('name') name: string,
   ) {
-    const userId = req.user.id;
-    if (!userId) {
+    const id = req.user.id;
+    if (!id) {
       throw new UnauthorizedException(
         'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.joinPrivateChannel(userId, password, name);
+    return this.channelsService.joinPrivateChannel(id, password, name);
   }
 }

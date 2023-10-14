@@ -70,12 +70,12 @@ export class ChannelsService {
     }
   }
 
-  async createDMChannel(userId: number, creatorId: number) {
+  async createDMChannel(id: number, creatorId: number) {
     try {
       const user = await this.prisma.users.findUnique({
         select: {name: true},
         where: {
-          id: userId,
+          id: id,
         },
       });
       if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -106,7 +106,7 @@ export class ChannelsService {
           data: [
             {
               channel_id: channel.id,
-              user_id: userId,
+              user_id: id,
               admin: false,
             },
             {
@@ -126,7 +126,7 @@ export class ChannelsService {
   }
 
 
-  async createChannel(channelData: CreateChannelDto, userId: number) {
+  async createChannel(channelData: CreateChannelDto, id: number) {
     const {name, password, option, users} = channelData;
 
     try {
@@ -163,7 +163,7 @@ export class ChannelsService {
           data: [
             {
               channel_id: channel.id,
-              user_id: userId,
+              user_id: id,
               admin: true,
             },
             // Adding other users as non-admins
@@ -194,7 +194,7 @@ export class ChannelsService {
     }
   }
 
-  async handleUserDeparture(channelId: number, userId: number) {
+  async handleUserDeparture(channelId: number, id: number) {
     try {
       // Remove the user from the channel
       const channelOption = await this.prisma.channelOptions.findUnique({
@@ -209,7 +209,7 @@ export class ChannelsService {
         where: {
           // Use appropriate condition to identify the user-channel relationship
           user_id_channel_id: {
-            user_id: userId,
+            user_id: id,
             channel_id: channelId,
           },
         },
@@ -250,13 +250,13 @@ export class ChannelsService {
 
   async updateChannel(
       channelId: number,
-      userId: number,
+      id: number,
       updateData: UpdateChannelDto,
   ) {
     const user = await this.prisma.channelUsers.findUnique({
       where: {
         user_id_channel_id: {
-          user_id: userId,
+          user_id: id,
           channel_id: channelId,
         },
       },
@@ -312,11 +312,11 @@ export class ChannelsService {
       if (!admin || admin.admin === false)
         throw new HttpException("You are not an admin", HttpStatus.FORBIDDEN);
 
-      const {userId, action} = managementData;
+      const {id, action} = managementData;
       const user = await this.prisma.channelUsers.findUnique({
         where: {
           user_id_channel_id: {
-            user_id: userId,
+            user_id: id,
             channel_id: channelId,
           },
         },
@@ -327,7 +327,7 @@ export class ChannelsService {
         return this.prisma.channelUsers.update({
           where: {
             user_id_channel_id: {
-              user_id: userId,
+              user_id: id,
               channel_id: channelId,
             },
           },
@@ -337,14 +337,14 @@ export class ChannelsService {
         });
       }
       if (action === UserAction.Kick) {
-        return this.handleUserDeparture(channelId, userId);
+        return this.handleUserDeparture(channelId, id);
       }
       if (action === UserAction.Ban) {
-        this.handleUserDeparture(channelId, userId);
+        this.handleUserDeparture(channelId, id);
         return this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
-            user_id: userId,
+            user_id: id,
           },
         });
       }
@@ -355,7 +355,7 @@ export class ChannelsService {
         return this.prisma.channelMutes.create({
           data: {
             channel_id: channelId,
-            user_id: userId,
+            user_id: id,
             until: until,
           },
         });
@@ -365,7 +365,7 @@ export class ChannelsService {
           where: {
             channel_id_user_id: {
               channel_id: channelId,
-              user_id: userId,
+              user_id: id,
             },
           },
         });
@@ -376,13 +376,13 @@ export class ChannelsService {
     }
   }
 
-  async joinPublicChannel(channelId: number, userId: number, password: string) {
+  async joinPublicChannel(channelId: number, id: number, password: string) {
     try {
       const banned = await this.prisma.channelBans.findUnique({
         where: {
           channel_id_user_id: {
             channel_id: channelId,
-            user_id: userId,
+            user_id: id,
           },
         },
       });
@@ -400,7 +400,7 @@ export class ChannelsService {
       return this.prisma.channelUsers.create({
         data: {
           channel_id: channelId,
-          user_id: userId,
+          user_id: id,
           admin: false,
         },
       });
@@ -411,7 +411,7 @@ export class ChannelsService {
     }
   }
 
-  async joinPrivateChannel(userId: number, password: string, name: string) {
+  async joinPrivateChannel(id: number, password: string, name: string) {
     try {
       const channel = await this.prisma.channels.findUnique({
         where: {
@@ -426,7 +426,7 @@ export class ChannelsService {
         where: {
           channel_id_user_id: {
             channel_id: channel.id,
-            user_id: userId,
+            user_id: id,
           },
         },
       });
@@ -441,7 +441,7 @@ export class ChannelsService {
       return this.prisma.channelUsers.create({
         data: {
           channel_id: channel.id,
-          user_id: userId,
+          user_id: id,
           admin: false,
         },
       });
