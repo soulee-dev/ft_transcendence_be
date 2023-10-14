@@ -1,7 +1,11 @@
 version: '3.1'
 
 services:
-  db:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+  database:
     image: postgres
     environment:
       POSTGRES_USER: kyhan
