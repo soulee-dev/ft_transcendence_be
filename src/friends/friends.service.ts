@@ -8,7 +8,8 @@ export class FriendsService {
   async getFriends(id: number) {
     try {
       return await this.prisma.friends.findMany({
-        where: { friend_id: id },
+        where: {
+          OR: [{friend_id: id}, {user_id: id}], },
       });
     } catch (error) {
       console.error(error);
@@ -42,7 +43,7 @@ export class FriendsService {
       if (receiver_id !== id) {
         throw new HttpException('Receiver ID does not match the request.', HttpStatus.BAD_REQUEST);
       }
-      this.prisma.friendRequests.delete({
+      await this.prisma.friendRequests.delete({
         where: { id: requestId },
       });
       return {
@@ -51,7 +52,7 @@ export class FriendsService {
       };
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to decline friend request ${id}`);
+      throw new NotFoundException(`Failed to decline friend request ${requestId}`);
     }
   }
 
@@ -74,11 +75,11 @@ export class FriendsService {
         throw new HttpException('Receiver ID does not match the request.', HttpStatus.BAD_REQUEST);
       }
 
-      this.prisma.friendRequests.delete({
+      await this.prisma.friendRequests.delete({
         where: { id: requestId },
       });
 
-      this.prisma.friends.createMany({
+      await this.prisma.friends.createMany({
         data: [
           {
             user_id: sender_id,
@@ -96,7 +97,7 @@ export class FriendsService {
       };
     } catch (error) {
       console.error(error);
-      throw new BadRequestException(`Failed to accept friend request ${id}`);
+      throw new BadRequestException(`Failed to accept friend request ${requestId}`);
     }
   }
 
@@ -161,19 +162,19 @@ export class FriendsService {
 
   async deleteFriend(id: number, friendName: string) {
     try {
-      const { id: friendId } = await this.prisma.users.findUnique({
+      const friend  = await this.prisma.users.findUnique({
         select: { id: true },
         where: { name: friendName },
-      }) || {};
+      });
 
-      if (!friendId) {
+      if (!friend) {
         throw new NotFoundException(`No user found with the name: ${friendName}`);
       }
 
       const friendship1 = await this.prisma.friends.findUnique({
         where: {
           user_id_friend_id: {
-            user_id: friendId,
+            user_id: friend.id,
             friend_id: id,
           },
         },
@@ -183,7 +184,7 @@ export class FriendsService {
         where: {
           user_id_friend_id: {
             user_id: id,
-            friend_id: friendId,
+            friend_id: friend.id,
           },
         },
       });
@@ -192,12 +193,15 @@ export class FriendsService {
         throw new NotFoundException(`No friendship found between user ${id} and ${friendName}`);
       }
 
-      this.prisma.friends.deleteMany({
+      await this.prisma.friends.deleteMany({
         where: {
           OR: [{ id: friendship1.id }, { id: friendship2.id }],
         },
       });
-      return HttpStatus.NO_CONTENT;
+      return {
+        status: HttpStatus.NO_CONTENT,
+        message: "Friend deleted successfully",
+      };
     } catch (error) {
       console.error(error);
       throw new BadRequestException(`Failed to delete friend ${friendName}`);

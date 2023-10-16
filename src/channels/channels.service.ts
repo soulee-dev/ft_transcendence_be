@@ -95,14 +95,13 @@ export class ChannelsService {
         },
       });
 
-      const channelInfo = await this.prisma.$transaction([
-        this.prisma.channelOptions.create({
+      const resultOfOption = await this.prisma.channelOptions.create({
           data: {
             channel_id: channel.id,
             option: ChannelOptions.Dm,
           },
-        }),
-        this.prisma.channelUsers.createMany({
+        });
+      const resultOfUsers = await this.prisma.channelUsers.createMany({
           data: [
             {
               channel_id: channel.id,
@@ -115,9 +114,8 @@ export class ChannelsService {
               admin: false,
             },
           ],
-        }),
-      ]);
-      return {channel, channelInfo};
+        });
+      return {channel, resultOfOption, resultOfUsers};
     } catch (error) {
       if (error instanceof HttpException) throw error;
       console.error('Error creating DM channel:', error);
@@ -329,7 +327,7 @@ export class ChannelsService {
       if (!user)
         throw new HttpException("User is not in channel", HttpStatus.NOT_FOUND);
       if (action === UserAction.GiveAdmin) {
-        return this.prisma.channelUsers.update({
+        return await this.prisma.channelUsers.update({
           where: {
             user_id_channel_id: {
               user_id: id,
@@ -342,11 +340,11 @@ export class ChannelsService {
         });
       }
       if (action === UserAction.Kick) {
-        return this.handleUserDeparture(channelId, id);
+        return await this.handleUserDeparture(channelId, id);
       }
       if (action === UserAction.Ban) {
         this.handleUserDeparture(channelId, id);
-        return this.prisma.channelBans.create({
+        return await this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
             user_id: id,
@@ -357,7 +355,7 @@ export class ChannelsService {
         const until = addMinutes(new Date(), 180);
 
         // Store the mute in the database with the expiration time
-        return this.prisma.channelMutes.create({
+        return await this.prisma.channelMutes.create({
           data: {
             channel_id: channelId,
             user_id: id,
@@ -366,7 +364,7 @@ export class ChannelsService {
         });
       }
       if (action === UserAction.UnBan) {
-        return this.prisma.channelBans.delete({
+        return await this.prisma.channelBans.delete({
           where: {
             channel_id_user_id: {
               channel_id: channelId,
@@ -402,7 +400,7 @@ export class ChannelsService {
       if (channel.password !== password)
         throw new HttpException("Incorrect password", HttpStatus.BAD_REQUEST);
 
-      return this.prisma.channelUsers.create({
+      return await this.prisma.channelUsers.create({
         data: {
           channel_id: channelId,
           user_id: id,
@@ -443,7 +441,7 @@ export class ChannelsService {
         throw new HttpException("Incorrect password", HttpStatus.BAD_REQUEST);
       }
 
-      return this.prisma.channelUsers.create({
+      return await this.prisma.channelUsers.create({
         data: {
           channel_id: channel.id,
           user_id: id,
