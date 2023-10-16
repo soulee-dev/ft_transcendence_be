@@ -18,6 +18,9 @@ export class AuthService {
       dbUser = await this.prisma.users.create({
         data: {
           id: user.id,
+          name: user.name,
+          profile_image: user.profile_image,
+          status: "online",
         },
       });
     }

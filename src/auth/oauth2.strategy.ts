@@ -41,7 +41,8 @@ export class OAuth2Strategy extends PassportStrategy(Strategy, 'oauth2') {
       // The following is a basic example; you can add more fields as required.
       return {
         id: user.id,
-        name: user.name,
+        name: user.login,
+        profile_image: user.image.link,
         email: user.email,
       };
     } catch (error) {
