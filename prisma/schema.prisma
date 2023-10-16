@@ -23,6 +23,8 @@ model Users {
   chats          Chat[]
   sentRequests   FriendRequests[] @relation("FriendRequests_sender_id_ToUsers")
   receivedRequests FriendRequests[] @relation("FriendRequests_receiver_id_ToUsers")
+
+  @@unique([name])
 }
 
 
