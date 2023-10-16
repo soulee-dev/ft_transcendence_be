@@ -111,6 +111,28 @@ export class FriendsService {
         throw new NotFoundException(`No user found with the name: ${friendName}`);
       }
 
+      const existingFriend1 = await this.prisma.friends.findUnique({
+        where: {
+          user_id_friend_id: {
+            user_id: senderId,
+            friend_id: receiverId,
+          }
+        }
+      })
+
+      const existingFriend2 = await this.prisma.friends.findUnique({
+        where: {
+          user_id_friend_id: {
+            user_id: receiverId,
+            friend_id: senderId,
+          }
+        }
+      })
+
+      if (existingFriend1 && existingFriend2) {
+        throw new BadRequestException("Friend already exists");
+      }
+
       const existingRequest = await this.prisma.friendRequests.findUnique({
         where: {
           sender_id_receiver_id: {
