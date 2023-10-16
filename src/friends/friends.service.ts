@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -27,24 +27,38 @@ export class FriendsService {
     }
   }
 
-  async declineFriendRequest(id: number) {
+  async declineFriendRequest(requestId: number, id: number) {
     try {
-      return await this.prisma.friendRequests.update({
-        where: { id: id },
-        data: {
-          status: 'declined',
+      const friendRequest = await this.prisma.friendRequests.findUnique({
+        where: { id: requestId },
+        select: {
+          receiver_id: true,
         },
       });
+      if (!friendRequest) {
+        throw new NotFoundException('Friend request not found.');
+      }
+      const { receiver_id } = friendRequest;
+      if (receiver_id !== id) {
+        throw new HttpException('Receiver ID does not match the request.', HttpStatus.BAD_REQUEST);
+      }
+      this.prisma.friendRequests.delete({
+        where: { id: requestId },
+      });
+      return {
+        status: HttpStatus.NO_CONTENT,
+        message: 'Friend request declined successfully.',
+      };
     } catch (error) {
       console.error(error);
       throw new NotFoundException(`Failed to decline friend request ${id}`);
     }
   }
 
-  async acceptFriendRequest(id: number) {
+  async acceptFriendRequest(requestId: number, id: number) {
     try {
       const friendRequest = await this.prisma.friendRequests.findUnique({
-        where: { id: id },
+        where: { id: requestId },
         select: {
           sender_id: true,
           receiver_id: true,
@@ -56,15 +70,15 @@ export class FriendsService {
       }
 
       const { sender_id, receiver_id } = friendRequest;
+      if (receiver_id !== id) {
+        throw new HttpException('Receiver ID does not match the request.', HttpStatus.BAD_REQUEST);
+      }
 
-      await this.prisma.friendRequests.update({
-        where: { id: id },
-        data: {
-          status: 'accepted',
-        },
+      this.prisma.friendRequests.delete({
+        where: { id: requestId },
       });
 
-      return await this.prisma.friends.createMany({
+      this.prisma.friends.createMany({
         data: [
           {
             user_id: sender_id,
@@ -76,6 +90,10 @@ export class FriendsService {
           },
         ],
       });
+      return {
+        status: HttpStatus.OK,
+        message: 'Friend request accepted successfully.',
+      };
     } catch (error) {
       console.error(error);
       throw new BadRequestException(`Failed to accept friend request ${id}`);
@@ -152,11 +170,12 @@ export class FriendsService {
         throw new NotFoundException(`No friendship found between user ${id} and ${friendName}`);
       }
 
-      return await this.prisma.friends.deleteMany({
+      this.prisma.friends.deleteMany({
         where: {
           OR: [{ id: friendship1.id }, { id: friendship2.id }],
         },
       });
+      return HttpStatus.NO_CONTENT;
     } catch (error) {
       console.error(error);
       throw new BadRequestException(`Failed to delete friend ${friendName}`);

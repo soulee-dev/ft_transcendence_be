@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Post, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, Param, Post, Req, UseGuards} from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import {
@@ -24,8 +24,9 @@ export class ChatController {
   @ApiResponse({ status: 200, description: 'Chat messages retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
-  async getChat(@Param('channel_id') id: number) {
-    return this.chatService.getChat(id);
+  async getChat(@Param('channel_id') channel_id: number, @Req() req) {
+    const id = req.user.id;
+    return this.chatService.getChat(channel_id, id);
   }
 
   @UseGuards(AuthGuard('jwt'))

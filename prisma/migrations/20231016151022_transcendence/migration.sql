@@ -9,7 +9,7 @@ CREATE TYPE "ChannelOption" AS ENUM ('PUBLIC', 'PRIVATE', 'DM');
 
 -- CreateTable
 CREATE TABLE "Users" (
-    "id" SERIAL NOT NULL,
+    "id" INTEGER NOT NULL,
     "name" VARCHAR(100),
     "profile_image" VARCHAR(255),
     "status" "Status",

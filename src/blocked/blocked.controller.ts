@@ -46,7 +46,8 @@ export class BlockedController {
   @ApiResponse({ status: 200, description: 'User unblocked successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({ name: 'blocked_id', description: 'ID of the user to unblock' })
-  async unblockUser(@Param('blocked_id') id: number) {
-    return this.blockedService.unblockUser(id);
+  async unblockUser(@Param('blocked_id') blockedId: number, @Req() req) {
+    const id = req.user.id;
+    return this.blockedService.unblockUser(blockedId, id);
   }
 }

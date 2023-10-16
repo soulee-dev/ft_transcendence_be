@@ -1,9 +1,10 @@
 import {
-  BadRequestException,
+  BadRequestException, HttpException, HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import {th} from "date-fns/locale";
 
 @Injectable()
 export class BlockedService {
@@ -57,8 +58,15 @@ export class BlockedService {
     }
   }
 
-  async unblockUser(id: number) {
+  async unblockUser(blockedId: number, id: number) {
     try {
+      const blockedContent = await this.prisma.blockedUsers.findUnique({
+        select: {blocked_by: true},
+        where: {id: blockedId},
+      });
+      if (blockedContent.blocked_by !== id) {
+        throw new HttpException('Blocked by ID does not match the request.', HttpStatus.BAD_REQUEST);
+      }
       return await this.prisma.blockedUsers.delete({
         where: { id: id },
       });

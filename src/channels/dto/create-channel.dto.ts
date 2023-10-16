@@ -41,7 +41,6 @@ export class CreateChannelDto {
     example: ['user1', 'user2'],
   })
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
   users: string[];
 }

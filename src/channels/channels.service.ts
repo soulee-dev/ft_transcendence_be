@@ -142,7 +142,13 @@ export class ChannelsService {
       if (invitedUsers.length !== users.length) {
         throw new HttpException('Some users not found', HttpStatus.NOT_FOUND);
       }
-
+      const existingChannel = await this.prisma.channels.findUnique({
+        where: {
+          name: name,
+        }
+      })
+      if (existingChannel)
+        throw new HttpException("Name already existed", HttpStatus.CONFLICT);
       // Transaction 1: Create the channel
       const channel = await this.prisma.channels.create({
         data: {
@@ -152,14 +158,13 @@ export class ChannelsService {
       });
 
       // Transaction 2: Create the channel options and channel users
-      const channelInfo = await this.prisma.$transaction([
-        this.prisma.channelOptions.create({
+        const resultOfOption = await this.prisma.channelOptions.create({
           data: {
             channel_id: channel.id,
             option: option,
           },
-        }),
-        this.prisma.channelUsers.createMany({
+        });
+        const resultOfUsers = await this.prisma.channelUsers.createMany({
           data: [
             {
               channel_id: channel.id,
@@ -173,11 +178,11 @@ export class ChannelsService {
               admin: false,
             })),
           ],
-        }),
-      ]);
+        });
       return {
         channel,
-        channelInfo,
+        resultOfOption,
+        resultOfUsers,
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;

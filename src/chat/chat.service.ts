@@ -6,10 +6,22 @@ import { SendMessageDto } from './dto/send-message.dto';
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getChat(id: number) {
+  async getChat(channelId: number, id: number) {
     try {
+      const user = await this.prisma.channelUsers.findUnique({
+        where: {
+          user_id_channel_id: {
+            user_id: id,
+            channel_id: channelId,
+          },
+        },
+      });
+
+      if (!user) {
+        throw new HttpException('You are not in the channel', HttpStatus.FORBIDDEN);
+      }
       return await this.prisma.chat.findMany({
-        where: { channel_id: id },
+        where: { channel_id: channelId },
       });
     } catch (error) {
       console.error(error);

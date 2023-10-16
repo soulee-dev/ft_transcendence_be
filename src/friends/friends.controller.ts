@@ -63,24 +63,26 @@ export class FriendsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('/request/:id/accept')
+  @Post('/request/:requestId/accept')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Accept a friend request by ID' })
   @ApiResponse({ status: 200, description: 'Friend request accepted successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiParam({ name: 'id', description: 'ID of the friend request to accept' })
-  async acceptFriendRequest(@Param('id') id: number) {
-    return this.friendsService.acceptFriendRequest(id);
+  @ApiParam({ name: 'requestId', description: 'ID of the friend request to accept' })
+  async acceptFriendRequest(@Param('requestId') requestId: number, @Req() req) {
+    const id = req.user.id;
+    return this.friendsService.acceptFriendRequest(requestId, id);
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('/request/:id/decline')
+  @Post('/request/:requestId/decline')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Decline a friend request by ID' })
   @ApiResponse({ status: 200, description: 'Friend request declined successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiParam({ name: 'id', description: 'ID of the friend request to decline' })
-  async declineFriendRequest(@Param('id') id: number) {
-    return this.friendsService.declineFriendRequest(id);
+  @ApiParam({ name: 'requestId', description: 'ID of the friend request to decline' })
+  async declineFriendRequest(@Param('requestId') requestId: number, @Req() req) {
+    const id = req.user.id;
+    return this.friendsService.declineFriendRequest(requestId, id);
   }
 }

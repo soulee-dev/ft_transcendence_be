@@ -14,7 +14,7 @@ export class OAuth2Strategy extends PassportStrategy(Strategy, 'oauth2') {
       clientID:
         'e320d9ca924a7d25085faade91848a3423c47e9039d1ea193e9b3a954c2fe7b7',
       clientSecret:
-        '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',
+        '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',
       callbackURL: 'http://localhost:3000/auth/callback',
     });
   }
