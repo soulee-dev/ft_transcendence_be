@@ -1,10 +1,19 @@
 version: '3.1'
 
+networks:
+  transcendence:
+    driver: bridge
+
 services:
   app:
     build: .
     ports:
       - "3000:3000"
+    depends_on:
+      - database
+    networks:
+      - transcendence
+
   database:
     image: postgres
     environment:
@@ -13,3 +22,19 @@ services:
       POSTGRES_DB: transcendence
     ports:
       - "5432:5432"
+    networks:
+      - transcendence
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com" 
+      PGADMIN_DEFAULT_PASSWORD: "admin"  
+    ports:
+      - "5050:80"
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    depends_on:
+      - database
+    networks:
+      - transcendence
