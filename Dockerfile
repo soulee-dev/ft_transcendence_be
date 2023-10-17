@@ -9,4 +9,4 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-CMD npx prisma migrate && npm run start:dev
+CMD npx prisma migrate dev && npm run start:dev
