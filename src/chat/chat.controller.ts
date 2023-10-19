@@ -38,9 +38,11 @@ export class ChatController {
   @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
   @ApiBody({ type: SendMessageDto })
   async sendMessage(
-    @Param('channel_id') id: number,
+    @Param('channel_id') channelId: number,
+    @Req() req,
     @Body() messageData: SendMessageDto,
   ) {
-    return this.chatService.sendMessage(id, messageData);
+    const id = req.user.id;
+    return this.chatService.sendMessage(channelId, id, messageData);
   }
 }

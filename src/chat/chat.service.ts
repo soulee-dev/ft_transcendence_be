@@ -29,15 +29,13 @@ export class ChatService {
     }
   }
 
-  async sendMessage(id: number, messageData: SendMessageDto) {
+  async sendMessage(channelId: number, senderId: number, messageData: SendMessageDto) {
     try {
-      const senderId = messageData.sent_by_id;
-
       const user = await this.prisma.channelUsers.findUnique({
         where: {
           user_id_channel_id: {
             user_id: senderId,
-            channel_id: id,
+            channel_id: channelId,
           },
         },
       });
@@ -49,7 +47,7 @@ export class ChatService {
       const mute = await this.prisma.channelMutes.findUnique({
         where: {
           channel_id_user_id: {
-            channel_id: id,
+            channel_id: channelId,
             user_id: senderId,
           },
         },
@@ -61,7 +59,8 @@ export class ChatService {
 
       return await this.prisma.chat.create({
         data: {
-          channel_id: id,
+          channel_id: channelId,
+          sent_by_id: senderId,
           ...messageData,
         },
       });
