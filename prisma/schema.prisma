@@ -14,6 +14,8 @@ model Users {
   id             Int            @id
   name           String?        @db.VarChar(100)
   profile_image  String?        @db.VarChar(255)
+  email          String?        @db.VarChar(255)
+  is_2fa         Boolean?
   status         Status?
   friends        Friends[]      @relation("Friends_user_id_ToUsers")
   friendOf       Friends[]      @relation("Friends_friend_id_ToUsers")
@@ -128,6 +130,4 @@ model Chat {
   message    String   @db.Text
   channel    Channels @relation(fields: [channel_id], references: [id])
   sent_by       Users    @relation(fields: [sent_by_id], references: [id])
-
-  @@unique([channel_id])
 }
