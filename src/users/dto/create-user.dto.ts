@@ -1,4 +1,4 @@
-import { IsEnum, IsString, IsInt, Min } from 'class-validator';
+import {IsEnum, IsString, IsInt, Min, IsBoolean} from 'class-validator';
 import { Status } from '@prisma/client';
 import {ApiProperty} from "@nestjs/swagger";
 import {UserStatusEnum} from "../enum/user-status.enum";
@@ -25,6 +25,20 @@ export class CreateUserDto {
   })
   @IsString()
   readonly profile_image: string;
+
+  @ApiProperty({
+    description: 'The email of the user',
+    example: 'kyhan@sudent.42seoul.kr'
+  })
+  @IsString()
+  readonly email: string;
+
+  @ApiProperty({
+    description: '2fa status of the user',
+    example: 'true'
+  })
+  @IsBoolean()
+  readonly is_2fa: boolean
 
   @ApiProperty({
     description: 'The status of the user',
