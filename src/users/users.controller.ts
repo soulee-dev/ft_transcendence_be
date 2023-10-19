@@ -25,7 +25,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Retrieve all users' })
   @ApiOkResponse({ description: 'Users retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  getUsers() {
+  async getUsers() {
     return this.usersService.getUsers();
   }
 
@@ -36,7 +36,7 @@ export class UsersController {
   @ApiOkResponse({ description: 'User retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({ name: 'id', description: 'ID of the user to retrieve' })
-  getUser(@Param('id') id: number) {
+  async getUser(@Param('id') id: number) {
     return this.usersService.getUser(id);
   }
 
@@ -46,7 +46,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Retrieve a my profile by ID' })
   @ApiOkResponse({ description: 'My profile retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  getMe(@Req() req) {
+  async getMe(@Req() req: any) {
     const id = req.user.id;
     return this.usersService.getUser(id);
   }
@@ -58,7 +58,7 @@ export class UsersController {
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiBody({ type: CreateUserDto })
-  createUser(@Body() userData: CreateUserDto) {
+  async createUser(@Body() userData: CreateUserDto) {
     return this.usersService.createUser(userData);
   }
 
@@ -69,7 +69,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiBody({ type: UpdateUserDto })
-  updateUser(@Req() req, @Body() userData: UpdateUserDto) {
+  async updateUser(@Req() req, @Body() userData: UpdateUserDto) {
     const id = req.user.id;
     return this.usersService.updateUser(id, userData);
   }
@@ -80,7 +80,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete a user by ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  deleteUser(@Req() req) {
+  async deleteUser(@Req() req) {
     const id = req.user.id;
     return this.usersService.deleteUser(id);
   }

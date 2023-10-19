@@ -18,7 +18,7 @@ export class UsersService {
 
   async getUser(id: number) {
     try {
-      const user = await this.prisma.users.findUnique({ where: { id } });
+      const user = await this.prisma.users.findUnique({ where: { id: id } });
       if (!user) throw new NotFoundException(`User with id ${id} not found`);
       return user;
     } catch (error) {
@@ -40,7 +40,7 @@ export class UsersService {
 
   async updateUser(id: number, userData: UpdateUserDto) {
     try {
-      return await this.prisma.users.update({ where: { id }, data: userData });
+      return await this.prisma.users.update({ where: { id: id }, data: userData });
     } catch (error) {
       console.error(error);
       throw new NotFoundException(`Failed to update user with id ${id}`);
@@ -49,7 +49,7 @@ export class UsersService {
 
   async deleteUser(id: number) {
     try {
-      return await this.prisma.users.delete({ where: { id } });
+      return await this.prisma.users.delete({ where: { id: id } });
     } catch (error) {
       console.error(error);
       throw new NotFoundException(`Failed to delete user with id ${id}`);
