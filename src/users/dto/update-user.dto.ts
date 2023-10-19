@@ -5,7 +5,7 @@ import {IsBoolean, IsEnum, IsInt, IsString, Min} from "class-validator";
 import {UserStatusEnum} from "../enum/user-status.enum";
 import {Status} from "@prisma/client";
 
-export class UpdateUserDto {
+export class UpdateUserDto extends PartialType(CreateUserDto){
     @ApiProperty({
         description: 'The unique identifier of the user from 42 api',
         example: 1,
@@ -13,7 +13,7 @@ export class UpdateUserDto {
     })
     @IsInt()
     @Min(1)
-    readonly id?: number;
+    id?: number;
 
     @ApiProperty({
         description: 'The name of the user',
@@ -21,7 +21,7 @@ export class UpdateUserDto {
         required: false,
     })
     @IsString()
-    readonly name?: string;
+    name?: string;
 
     @ApiProperty({
         description: 'The URL of the profile image',
@@ -29,7 +29,7 @@ export class UpdateUserDto {
         required: false,
     })
     @IsString()
-    readonly profile_image?: string;
+    profile_image?: string;
 
     @ApiProperty({
         description: 'The email of the user',
@@ -37,7 +37,7 @@ export class UpdateUserDto {
         required: false,
     })
     @IsString()
-    readonly email?: string;
+    email?: string;
 
     @ApiProperty({
         description: '2fa status of the user',
@@ -45,7 +45,7 @@ export class UpdateUserDto {
         required: false,
     })
     @IsBoolean()
-    readonly is_2fa?: boolean
+    is_2fa?: boolean
 
     @ApiProperty({
         description: 'The status of the user',
@@ -54,5 +54,5 @@ export class UpdateUserDto {
         required: false,
     })
     @IsEnum(UserStatusEnum)
-    readonly status?: Status;
+    status?: Status;
 }
