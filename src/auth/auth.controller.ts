@@ -17,9 +17,7 @@ export class AuthController {
   @UseGuards(AuthGuard('oauth2'))
   async oauthCallback(@Req() req: any, @Res() res: Response) {
     const jwt = await this.authService.login(req.user);
-    res.cookie('access_token', jwt, {
-      httpOnly: true,
-    });
+    res.cookie('access_token', jwt);
     return res.send({ message: 'logged in successfully' });
   }
 }
