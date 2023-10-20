@@ -82,7 +82,6 @@ export class ChannelsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBody({ type: CreateChannelDto })
   async createChannel(@Body() channelData: CreateChannelDto, @Req() req: any) {
-    console.log(req.user.id);
     const id = req.user.id;
     if (!id) {
       throw new UnauthorizedException(

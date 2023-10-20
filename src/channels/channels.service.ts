@@ -352,7 +352,7 @@ export class ChannelsService {
         });
       }
       if (action === UserAction.Mute) {
-        const until = addMinutes(new Date(), 180);
+        const until = addMinutes(new Date(), 3);
 
         // Store the mute in the database with the expiration time
         return await this.prisma.channelMutes.create({
