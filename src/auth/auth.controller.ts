@@ -27,10 +27,10 @@ export class AuthController {
     if (user.is_2fa === true) {
       const otp = this.authService.generateOTP(req.user.id);
       await this.authService.sendOtpEmail(req.user.email, otp);
-      return res.redirect(`localhost:3001/2fa/${req.user.id}`)
+      return res.redirect(`http://localhost:3001/2fa/${req.user.id}`)
     }
     const jwt = await this.authService.login(req.user);
-    return res.cookie('access_token', jwt).redirect('localhost:3001/');
+    return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
   }
 
   @Post('validate-otp')
@@ -43,7 +43,7 @@ export class AuthController {
     const isValid = await this.authService.validateOTP(userId, otp);
     if (isValid) {
       const jwt = await this.authService.login(req.user);
-      return res.cookie('access_token', jwt).redirect('localhost:3001/');
+      return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
     } else {
       return res.status(400).send({message: 'Invalid OTP!'});
     }
