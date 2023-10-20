@@ -29,16 +29,6 @@ export class UsersController {
     return this.usersService.getUsers();
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Get('/:id')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Retrieve a user by ID' })
-  @ApiOkResponse({ description: 'User retrieved successfully' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiParam({ name: 'id', description: 'ID of the user to retrieve' })
-  async getUser(@Param('id') id: number) {
-    return this.usersService.getUser(id);
-  }
 
   @UseGuards(AuthGuard('jwt'))
   @Get('/me')
@@ -48,6 +38,17 @@ export class UsersController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getMe(@Req() req: any) {
     const id = req.user.id;
+    return this.usersService.getUser(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/:id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve a user by ID' })
+  @ApiOkResponse({ description: 'User retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiParam({ name: 'id', description: 'ID of the user to retrieve' })
+  async getUser(@Param('id') id: number) {
     return this.usersService.getUser(id);
   }
 
