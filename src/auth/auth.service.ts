@@ -78,7 +78,6 @@ export class AuthService {
       if (!storedOtp || storedOtp !== otp) {
         return false;
       }
-
       return true;
     } catch (error) {
       console.error('Failed to validate OTP:', error);
@@ -100,9 +99,9 @@ export class AuthService {
     }
   }
 
-  async login(user: any): Promise<string> {
+  async login(user: any, id: number): Promise<string> {
     let dbUser = await this.prisma.users.findUnique({
-      where: { id: user.id },
+      where: { id: id },
     });
     // TODO: Add additional infos about user
     if (!dbUser) {
