@@ -29,15 +29,15 @@ export class AuthController {
       if (user.is_2fa === true) {
         const otp = this.authService.generateOTP(req.user.id);
         await this.authService.sendOtpEmail(req.user.email, otp);
-        return res.redirect(`http://localhost:3001/2fa/${req.user.id}`)
+        return res.redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`)
       }
       const jwt = await this.authService.login(req.user, id);
-      return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
+      return res.cookie('access_token', jwt).redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
 
     } catch (error) {
       if (error instanceof NotFoundException) {
         const jwt = await this.authService.login(req.user, req.user.id);
-        return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
+        return res.cookie('access_token', jwt).redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
       }
       return error;
     }
@@ -53,7 +53,7 @@ export class AuthController {
     const isValid = await this.authService.validateOTP(userId, otp);
     if (isValid) {
       const jwt = await this.authService.login(req.user, parseInt(userId, 10));
-      return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
+      return res.cookie('access_token', jwt).redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
     } else {
       return res.status(400).send({message: 'Invalid OTP!'});
     }

@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as speakeasy from 'speakeasy';
 import * as nodemailer from 'nodemailer';
 import {createClient} from "redis";
+import * as process from "process";
 
 
 @Injectable()
@@ -119,6 +120,6 @@ export class AuthService {
     const payload = { sub: dbUser.id };
     // TODO: It should be initialized in .env
     // TODO: It should be removed in further version
-    return this.jwtService.sign(payload, {secret: 'YOUR_SECRET_KEY'});
+    return this.jwtService.sign(payload, {secret: process.env.YOUR_SECRET_KEY});
   }
 }

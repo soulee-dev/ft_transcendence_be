@@ -11,11 +11,9 @@ export class OAuth2Strategy extends PassportStrategy(Strategy, 'oauth2') {
     super({
       authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
       tokenURL: 'https://api.intra.42.fr/oauth/token',
-      clientID:
-        'e320d9ca924a7d25085faade91848a3423c47e9039d1ea193e9b3a954c2fe7b7',
-      clientSecret:
-        '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',
-      callbackURL: 'http://localhost:3000/auth/callback',
+      clientID: process.env.YOUR_CLIENT_ID,
+      clientSecret: process.env.YOUR_CLIENT_SECRET,
+      callbackURL: `http://${process.env.HOST}:${process.env.BE_PORT}/auth/callback`,
     });
   }
 
