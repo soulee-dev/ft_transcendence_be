@@ -5,6 +5,7 @@ import { Response } from 'express';
 import {ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {ValidateOtpDto} from "./dto/validate-otp.dto";
 import {UsersService} from "../users/users.service";
+import { NotFoundException } from '@nestjs/common';
 
 @ApiTags("auth")
 @Controller('auth')
@@ -22,15 +23,24 @@ export class AuthController {
   @UseGuards(AuthGuard('oauth2'))
   async oauthCallback(@Req() req: any, @Res() res: Response) {
     // TODO: 여기서 2fa on off 처리해야할듯
-    const id = req.user.id;
-    const user = await this.userService.getUser(id);
-    if (user.is_2fa === true) {
-      const otp = this.authService.generateOTP(req.user.id);
-      await this.authService.sendOtpEmail(req.user.email, otp);
-      return res.redirect(`http://localhost:3001/2fa/${req.user.id}`)
+    try {
+      const id = req.user.id;
+      const user = await this.userService.getUser(id);
+      if (user.is_2fa === true) {
+        const otp = this.authService.generateOTP(req.user.id);
+        await this.authService.sendOtpEmail(req.user.email, otp);
+        return res.redirect(`http://localhost:3001/2fa/${req.user.id}`)
+      }
+      const jwt = await this.authService.login(req.user);
+      return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
+
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        const jwt = await this.authService.login(req.user);
+        return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
+      }
+      return error;
     }
-    const jwt = await this.authService.login(req.user);
-    return res.cookie('access_token', jwt).redirect('http://localhost:3001/');
   }
 
   @Post('validate-otp')
