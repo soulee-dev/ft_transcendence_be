@@ -57,8 +57,8 @@ export class AuthService {
       encoding: 'base32'
     });
 
-    this.redisClient.set(`2fa:${userId}`, otp, 'EX', 300); // Expires in 5 minutes
-
+    this.redisClient.set(`2fa:${userId}`, otp);
+    this.redisClient.expire(`2fa:${userId}`, 300);
     return otp;
   }
 
