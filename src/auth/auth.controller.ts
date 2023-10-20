@@ -4,11 +4,15 @@ import { AuthService } from './auth.service';
 import { Response } from 'express';
 import {ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {ValidateOtpDto} from "./dto/validate-otp.dto";
+import {UsersService} from "../users/users.service";
 
 @ApiTags("auth")
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+      private readonly authService: AuthService,
+      private readonly userService: UsersService,
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard('oauth2'))
@@ -18,7 +22,9 @@ export class AuthController {
   @UseGuards(AuthGuard('oauth2'))
   async oauthCallback(@Req() req: any, @Res() res: Response) {
     // TODO: 여기서 2fa on off 처리해야할듯
-    if (req.user.is_2fa === true) {
+    const id = req.user.id;
+    const user = await this.userService.getUser(id);
+    if (user.is_2fa === true) {
       const otp = this.authService.generateOTP(req.user.id);
       await this.authService.sendOtpEmail(req.user.email, otp);
       return res.redirect(`localhost:3001/2fa/${req.user.id}`)

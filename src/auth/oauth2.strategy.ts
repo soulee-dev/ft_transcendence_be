@@ -44,7 +44,6 @@ export class OAuth2Strategy extends PassportStrategy(Strategy, 'oauth2') {
         name: user.login,
         profile_image: user.image.link,
         email: user.email,
-        is_2fa: false,
       };
     } catch (error) {
       // Handle the error. This can be a logging mechanism or any error handling strategy you have.

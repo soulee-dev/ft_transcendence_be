@@ -112,7 +112,7 @@ export class AuthService {
           name: user.name,
           profile_image: user.profile_image,
           email: user.email,
-          is_2fa: user.is_2fa,
+          is_2fa: false,
           status: "online",
         },
       });
