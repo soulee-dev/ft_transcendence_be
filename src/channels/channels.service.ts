@@ -6,10 +6,16 @@ import { UpdateChannelDto } from './dto/update-channel.dto';
 import { UserActionDto } from './dto/user-action.dto';
 import { UserAction } from './enum/user-action.enum';
 import { addMinutes } from 'date-fns';
+import {ChannelsGateway} from "./channels.gateway";
+import {NotificationGateway} from "../notification/notification.gateway";
+import {NotificationPayload} from "../notification/notification-payload.interface";
 
 @Injectable()
 export class ChannelsService {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+      private readonly prisma: PrismaService,
+      private readonly notificationGateway: NotificationGateway,
+      ) {
   }
 
   async getPublicChannels() {
@@ -115,6 +121,13 @@ export class ChannelsService {
             },
           ],
         });
+      const payload: NotificationPayload = {
+        type: "ADDED_TO_CHANNEL",
+        channelId: channel.id,
+        userId: NaN,
+        message: `You have been added to a new channel: ${channel.id}`,
+      }
+      this.notificationGateway.sendNotificationToUser(id, payload)
       return {channel, resultOfOption, resultOfUsers};
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -177,6 +190,15 @@ export class ChannelsService {
             })),
           ],
         });
+        const payload: NotificationPayload = {
+          type: "ADDED_TO_CHANNEL",
+          channelId: channel.id,
+          userId: NaN,
+          message: `You have been added to a new channel: ${channel.id}`,
+        }
+        invitedUsers.forEach(user => {
+          this.notificationGateway.sendNotificationToUser(user.id, payload);
+        })
       return {
         channel,
         resultOfOption,
@@ -327,7 +349,7 @@ export class ChannelsService {
       if (!user)
         throw new HttpException("User is not in channel", HttpStatus.NOT_FOUND);
       if (action === UserAction.GiveAdmin) {
-        return await this.prisma.channelUsers.update({
+        const userState = await this.prisma.channelUsers.update({
           where: {
             user_id_channel_id: {
               user_id: id,
@@ -338,33 +360,65 @@ export class ChannelsService {
             admin: true,
           },
         });
+        const payload: NotificationPayload = {
+          type: "GIVEN_ADMIN",
+          channelId: channelId,
+          userId: NaN,
+          message: `You have given admin: ${channelId}`,
+        }
+        this.notificationGateway.sendNotificationToUser(id, payload);
+        return userState;
       }
       if (action === UserAction.Kick) {
-        return await this.handleUserDeparture(channelId, id);
+        const userState = await this.handleUserDeparture(channelId, id);
+        const payload: NotificationPayload = {
+          type: "KICKED",
+          channelId: channelId,
+          userId: NaN,
+          message: `You have kicked: ${channelId}`,
+        }
+        this.notificationGateway.sendNotificationToUser(id, payload);
+        return userState;
       }
       if (action === UserAction.Ban) {
         this.handleUserDeparture(channelId, id);
-        return await this.prisma.channelBans.create({
+        const userState = await this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
             user_id: id,
           },
         });
+        const payload: NotificationPayload = {
+          type: "BANNED",
+          channelId: channelId,
+          userId: NaN,
+          message: `You have banned: ${channelId}`,
+        }
+        this.notificationGateway.sendNotificationToUser(id, payload);
+        return userState;
       }
       if (action === UserAction.Mute) {
         const until = addMinutes(new Date(), 3);
 
         // Store the mute in the database with the expiration time
-        return await this.prisma.channelMutes.create({
+        const userState = await this.prisma.channelMutes.create({
           data: {
             channel_id: channelId,
             user_id: id,
             until: until,
           },
         });
+        const payload: NotificationPayload = {
+          type: "MUTED",
+          channelId: channelId,
+          userId: NaN,
+          message: `You have muted: ${channelId}`,
+        }
+        this.notificationGateway.sendNotificationToUser(id, payload);
+        return userState;
       }
       if (action === UserAction.UnBan) {
-        return await this.prisma.channelBans.delete({
+        const userState = await this.prisma.channelBans.delete({
           where: {
             channel_id_user_id: {
               channel_id: channelId,
@@ -372,6 +426,14 @@ export class ChannelsService {
             },
           },
         });
+        const payload: NotificationPayload = {
+          type: "UNBANNED",
+          channelId: channelId,
+          userId: NaN,
+          message: `You have unbanned: ${channelId}`,
+        }
+        this.notificationGateway.sendNotificationToUser(id, payload);
+        return userState;
       }
     } catch (error) {
       console.error(error);

@@ -5,10 +5,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {th} from "date-fns/locale";
+import {NotificationGateway} from "../notification/notification.gateway";
+import {NotificationPayload} from "../notification/notification-payload.interface";
 
 @Injectable()
 export class BlockedService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+      private readonly prisma: PrismaService,
+      private readonly notificationGateway: NotificationGateway,
+      ) {}
 
   async getBlockedUser(id: number) {
     try {
@@ -46,12 +51,20 @@ export class BlockedService {
         throw new BadRequestException('Blocked user already exists.');
       }
 
-      return await this.prisma.blockedUsers.create({
+      const ret = await this.prisma.blockedUsers.create({
         data: {
           user_id: blockedUserId,
           blocked_by: id,
         },
       });
+      const payload: NotificationPayload = {
+        type: "BLOCKED_BY_USER",
+        channelId: NaN,
+        userId: id,
+        message: `You have blocked: ${id}`,
+      }
+      this.notificationGateway.sendNotificationToUser(blockedUserId, payload);
+      return ret;
     } catch (error) {
       console.error(error);
       throw new BadRequestException('Failed to block user');
@@ -61,15 +74,23 @@ export class BlockedService {
   async unblockUser(blockedId: number, id: number) {
     try {
       const blockedContent = await this.prisma.blockedUsers.findUnique({
-        select: {blocked_by: true},
+        select: {blocked_by: true, user_id: true},
         where: {id: blockedId},
       });
       if (blockedContent.blocked_by !== id) {
         throw new HttpException('Blocked by ID does not match the request.', HttpStatus.BAD_REQUEST);
       }
-      return await this.prisma.blockedUsers.delete({
-        where: { id: id },
+      const ret = await this.prisma.blockedUsers.delete({
+        where: { id: blockedId },
       });
+      const payload: NotificationPayload = {
+        type: "UNBLOCKED_BY_USER",
+        channelId: NaN,
+        userId: id,
+        message: `You have unblocked: ${id}`,
+      }
+      this.notificationGateway.sendNotificationToUser(blockedContent.user_id, payload);
+      return ret;
     } catch (error) {
       console.error(error);
       throw new NotFoundException(`Failed to unblock user with id ${id}`);

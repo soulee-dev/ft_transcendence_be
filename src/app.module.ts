@@ -18,6 +18,7 @@ import { BlockedModule } from './blocked/blocked.module';
 import { ChannelsModule } from './channels/channels.module';
 import { CronJobsService } from './cron-jobs/cron-jobs.service';
 import { CronJobsModule } from './cron-jobs/cron-jobs.module';
+import { NotificationGateway } from './notification/notification.gateway';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { CronJobsModule } from './cron-jobs/cron-jobs.module';
     JwtService,
     FriendsService,
     CronJobsService,
+    NotificationGateway,
   ],
 })
 export class AppModule {}
