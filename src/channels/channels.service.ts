@@ -9,12 +9,14 @@ import { addMinutes } from 'date-fns';
 import {ChannelsGateway} from "./channels.gateway";
 import {NotificationGateway} from "../notification/notification.gateway";
 import {NotificationPayload} from "../notification/notification-payload.interface";
+import {ChannelNotificationPayload} from "./channel-notification-payload.interface";
 
 @Injectable()
 export class ChannelsService {
   constructor(
       private readonly prisma: PrismaService,
       private readonly notificationGateway: NotificationGateway,
+      private readonly channelsGateway: ChannelsGateway,
       ) {
   }
 
@@ -249,21 +251,29 @@ export class ChannelsService {
 
       // If no users left, delete the channel and related entities
       if (remainingUsers.length === 0) {
-        await this.prisma.$transaction([
-          this.prisma.channelUsers.deleteMany({
+          const deletedUser = await this.prisma.channelUsers.deleteMany({
             where: {channel_id: channelId},
-          }),
-          this.prisma.channelOptions.deleteMany({
+          });
+        const deletedOptions = await this.prisma.channelOptions.deleteMany({
             where: {channel_id: channelId},
-          }),
-          this.prisma.chat.delete({
+          });
+        const deletedChat = await this.prisma.chat.delete({
             where: {id: channelId},
-          }),
-          this.prisma.channels.delete({
+          });
+        const deletedChannel = await this.prisma.channels.delete({
             where: {id: channelId},
-          }),
-        ]);
+          });
+        return {
+          deletedUser, deletedOptions, deletedChat, deletedChannel,
+        }
       }
+      const payload: ChannelNotificationPayload = {
+        type: 'USER_QUIT',
+        channelId: channelId,
+        userId: id,
+        message: `user ${id} quited this channel ${channelId}`
+      };
+      this.channelsGateway.sendNotificationToChannel(channelId, payload);
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
@@ -301,7 +311,13 @@ export class ChannelsService {
         where: {id: channelId},
         data: updateData,
       });
-
+      const payload: ChannelNotificationPayload = {
+        type: 'CHANNEL_UPDATED',
+        channelId: channelId,
+        userId: NaN,
+        message: `Channel has been updated ${channelId}`,
+      };
+      this.channelsGateway.sendNotificationToChannel(channelId, payload);
       return updatedChannel;
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -462,14 +478,21 @@ export class ChannelsService {
       if (channel.password !== password)
         throw new HttpException("Incorrect password", HttpStatus.BAD_REQUEST);
 
-      return await this.prisma.channelUsers.create({
+      const joinedUser = await this.prisma.channelUsers.create({
         data: {
           channel_id: channelId,
           user_id: id,
           admin: false,
         },
       });
-
+      const payload: ChannelNotificationPayload = {
+        type: 'USER_JOIN',
+        channelId: channelId,
+        userId: id,
+        message: `user ${id} joined this channel ${channelId}`
+      };
+      this.channelsGateway.sendNotificationToChannel(channelId, payload);
+      return joinedUser;
     } catch (error) {
       console.error(error);
       throw new HttpException("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -503,14 +526,21 @@ export class ChannelsService {
         throw new HttpException("Incorrect password", HttpStatus.BAD_REQUEST);
       }
 
-      return await this.prisma.channelUsers.create({
+      const joinedUser = await this.prisma.channelUsers.create({
         data: {
           channel_id: channel.id,
           user_id: id,
           admin: false,
         },
       });
-
+      const payload: ChannelNotificationPayload = {
+        type: 'USER_JOIN',
+        channelId: channel.id,
+        userId: id,
+        message: `user ${id} quited this channel ${channel.id}`
+      };
+      this.channelsGateway.sendNotificationToChannel(channel.id, payload);
+      return joinedUser
     } catch (error) {
       console.error(error);
       throw new HttpException("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);

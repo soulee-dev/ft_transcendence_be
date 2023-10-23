@@ -6,6 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import {ChannelNotificationPayload} from "./channel-notification-payload.interface";
 
 @WebSocketGateway()
 export class ChannelsGateway {
@@ -41,5 +42,9 @@ export class ChannelsGateway {
 
   sendMessageToChannel(channelId: number, message: string) {
     this.server.to(channelId.toString()).emit('newMessage', message);
+  }
+
+  sendNotificationToChannel(channelId: number, payload: ChannelNotificationPayload) {
+    this.server.to(channelId.toString()).emit('notification', payload);
   }
 }
