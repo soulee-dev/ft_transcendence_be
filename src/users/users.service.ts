@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -40,6 +40,10 @@ export class UsersService {
 
   async updateUser(id: number, userData: UpdateUserDto) {
     try {
+      if (userData.name) {
+        let editedName = userData.name;
+        userData.name = editedName.trim().replace(/\s+/g, '');
+      }
       return await this.prisma.users.update({ where: { id: id }, data: userData });
     } catch (error) {
       console.error(error);

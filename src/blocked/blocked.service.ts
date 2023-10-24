@@ -28,6 +28,7 @@ export class BlockedService {
 
   async blockUser(id: number, name: string) {
     try {
+      name = name.trim().replace(/\s+/g, '');
       const { id: blockedUserId } =
       (await this.prisma.users.findUnique({
         select: { id: true },

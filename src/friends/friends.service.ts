@@ -140,6 +140,7 @@ export class FriendsService {
 
   async addFriend(senderId: number, friendName: string) {
     try {
+      friendName = friendName.trim().replace(/\s+/g, '');
       const { id: receiverId } =
         (await this.prisma.users.findUnique({
           select: { id: true },
@@ -209,6 +210,7 @@ export class FriendsService {
 
   async deleteFriend(id: number, friendName: string) {
     try {
+      friendName = friendName.trim().replace(/\s+/g, '');
       const friend = await this.prisma.users.findUnique({
         select: { id: true },
         where: { name: friendName },
