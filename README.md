@@ -1,9 +1,9 @@
 # Run application
 ```bash
-npm install
-npx prisma generate
+make
+```
 
-docker compose up
-
-npm run star:dev
+# Re-build application
+```bash
+make re
 ```
