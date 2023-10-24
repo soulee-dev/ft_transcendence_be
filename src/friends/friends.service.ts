@@ -1,19 +1,25 @@
-import {BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException} from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import {NotificationPayload} from "../notification/notification-payload.interface";
-import {NotificationGateway} from "../notification/notification.gateway";
+import { NotificationPayload } from '../notification/notification-payload.interface';
+import { NotificationGateway } from '../notification/notification.gateway';
 
 @Injectable()
 export class FriendsService {
   constructor(
-      private readonly prisma: PrismaService,
-      private readonly notificationGateway: NotificationGateway) {}
+    private readonly prisma: PrismaService,
+    private readonly notificationGateway: NotificationGateway,
+  ) {}
 
   async getFriends(id: number) {
     try {
       return await this.prisma.friends.findMany({
-        where: {
-          OR: [{friend_id: id}, {user_id: id}], },
+        where: { user_id: id },
       });
     } catch (error) {
       console.error(error);
@@ -28,7 +34,9 @@ export class FriendsService {
       });
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to get friend requests for user ${id}`);
+      throw new NotFoundException(
+        `Failed to get friend requests for user ${id}`,
+      );
     }
   }
 
@@ -46,17 +54,20 @@ export class FriendsService {
       }
       const { sender_id, receiver_id } = friendRequest;
       if (receiver_id !== id) {
-        throw new HttpException('Receiver ID does not match the request.', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Receiver ID does not match the request.',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       await this.prisma.friendRequests.delete({
         where: { id: requestId },
       });
       const payload: NotificationPayload = {
-        type: "DECLINED_YOUR_REQ",
+        type: 'DECLINED_YOUR_REQ',
         channelId: NaN,
         userId: receiver_id,
         message: `You have been declined your friend request: ${receiver_id}`,
-      }
+      };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
       return {
         status: HttpStatus.NO_CONTENT,
@@ -64,7 +75,9 @@ export class FriendsService {
       };
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to decline friend request ${requestId}`);
+      throw new NotFoundException(
+        `Failed to decline friend request ${requestId}`,
+      );
     }
   }
 
@@ -84,7 +97,10 @@ export class FriendsService {
 
       const { sender_id, receiver_id } = friendRequest;
       if (receiver_id !== id) {
-        throw new HttpException('Receiver ID does not match the request.', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'Receiver ID does not match the request.',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       await this.prisma.friendRequests.delete({
@@ -104,11 +120,11 @@ export class FriendsService {
         ],
       });
       const payload: NotificationPayload = {
-        type: "ACCEPTED_YOUR_REQ",
+        type: 'ACCEPTED_YOUR_REQ',
         channelId: NaN,
         userId: receiver_id,
         message: `You have been declined your friend request: ${receiver_id}`,
-      }
+      };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
       return {
         status: HttpStatus.OK,
@@ -116,19 +132,24 @@ export class FriendsService {
       };
     } catch (error) {
       console.error(error);
-      throw new BadRequestException(`Failed to accept friend request ${requestId}`);
+      throw new BadRequestException(
+        `Failed to accept friend request ${requestId}`,
+      );
     }
   }
 
   async addFriend(senderId: number, friendName: string) {
     try {
-      const { id: receiverId } = await this.prisma.users.findUnique({
-        select: { id: true },
-        where: { name: friendName },
-      }) || {};
+      const { id: receiverId } =
+        (await this.prisma.users.findUnique({
+          select: { id: true },
+          where: { name: friendName },
+        })) || {};
 
       if (!receiverId) {
-        throw new NotFoundException(`No user found with the name: ${friendName}`);
+        throw new NotFoundException(
+          `No user found with the name: ${friendName}`,
+        );
       }
 
       const existingFriend1 = await this.prisma.friends.findUnique({
@@ -136,21 +157,21 @@ export class FriendsService {
           user_id_friend_id: {
             user_id: senderId,
             friend_id: receiverId,
-          }
-        }
-      })
+          },
+        },
+      });
 
       const existingFriend2 = await this.prisma.friends.findUnique({
         where: {
           user_id_friend_id: {
             user_id: receiverId,
             friend_id: senderId,
-          }
-        }
-      })
+          },
+        },
+      });
 
       if (existingFriend1 && existingFriend2) {
-        throw new BadRequestException("Friend already exists");
+        throw new BadRequestException('Friend already exists');
       }
 
       const existingRequest = await this.prisma.friendRequests.findUnique({
@@ -174,11 +195,11 @@ export class FriendsService {
         },
       });
       const payload: NotificationPayload = {
-        type: "REQUESTED_FRIEND",
+        type: 'REQUESTED_FRIEND',
         channelId: NaN,
         userId: senderId,
         message: `You have requested friend: ${senderId}`,
-      }
+      };
       this.notificationGateway.sendNotificationToUser(receiverId, payload);
     } catch (error) {
       console.error(error);
@@ -188,13 +209,15 @@ export class FriendsService {
 
   async deleteFriend(id: number, friendName: string) {
     try {
-      const friend  = await this.prisma.users.findUnique({
+      const friend = await this.prisma.users.findUnique({
         select: { id: true },
         where: { name: friendName },
       });
 
       if (!friend) {
-        throw new NotFoundException(`No user found with the name: ${friendName}`);
+        throw new NotFoundException(
+          `No user found with the name: ${friendName}`,
+        );
       }
 
       const friendship1 = await this.prisma.friends.findUnique({
@@ -216,7 +239,9 @@ export class FriendsService {
       });
 
       if (!friendship1 || !friendship2) {
-        throw new NotFoundException(`No friendship found between user ${id} and ${friendName}`);
+        throw new NotFoundException(
+          `No friendship found between user ${id} and ${friendName}`,
+        );
       }
 
       await this.prisma.friends.deleteMany({
@@ -225,15 +250,15 @@ export class FriendsService {
         },
       });
       const payload: NotificationPayload = {
-        type: "DELETED_FRIEND",
+        type: 'DELETED_FRIEND',
         channelId: NaN,
         userId: id,
         message: `You have requested friend: ${id}`,
-      }
+      };
       this.notificationGateway.sendNotificationToUser(friend.id, payload);
       return {
         status: HttpStatus.NO_CONTENT,
-        message: "Friend deleted successfully",
+        message: 'Friend deleted successfully',
       };
     } catch (error) {
       console.error(error);

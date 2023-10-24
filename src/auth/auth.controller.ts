@@ -1,18 +1,26 @@
-import {Controller, Get, UseGuards, Req, Res, Post, Body} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Req,
+  Res,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
-import {ApiBody, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
-import {ValidateOtpDto} from "./dto/validate-otp.dto";
-import {UsersService} from "../users/users.service";
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ValidateOtpDto } from './dto/validate-otp.dto';
+import { UsersService } from '../users/users.service';
 import { NotFoundException } from '@nestjs/common';
 
-@ApiTags("auth")
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
-      private readonly authService: AuthService,
-      private readonly userService: UsersService,
+    private readonly authService: AuthService,
+    private readonly userService: UsersService,
   ) {}
 
   @Get()
@@ -29,15 +37,20 @@ export class AuthController {
       if (user.is_2fa === true) {
         const otp = this.authService.generateOTP(req.user.id);
         await this.authService.sendOtpEmail(req.user.email, otp);
-        return res.redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`)
+        return res.redirect(
+          `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
+        );
       }
       const jwt = await this.authService.login(req.user, id);
-      return res.cookie('access_token', jwt).redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
-
+      return res
+        .cookie('access_token', jwt)
+        .redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
     } catch (error) {
       if (error instanceof NotFoundException) {
         const jwt = await this.authService.login(req.user, req.user.id);
-        return res.cookie('access_token', jwt).redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
+        return res
+          .cookie('access_token', jwt)
+          .redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
       }
       return error;
     }
@@ -45,17 +58,26 @@ export class AuthController {
 
   @Post('validate-otp')
   @ApiOperation({ summary: 'Validate OTP and log in the user' })
-  @ApiResponse({ status: 200, description: 'OTP validation successful and logged in.' })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP validation successful and logged in.',
+  })
   @ApiResponse({ status: 400, description: 'Invalid OTP.' })
   @ApiBody({ type: ValidateOtpDto })
-  async validateOtp(@Req() req: any, @Res() res: Response, @Body() otpData: ValidateOtpDto) {
-    const {userId, otp} = otpData;
+  async validateOtp(
+    @Req() req: any,
+    @Res() res: Response,
+    @Body() otpData: ValidateOtpDto,
+  ) {
+    const { userId, otp } = otpData;
     const isValid = await this.authService.validateOTP(userId, otp);
     if (isValid) {
       const jwt = await this.authService.login(req.user, parseInt(userId, 10));
-      return res.cookie('access_token', jwt).redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
+      return res.cookie('access_token', jwt).send({
+        redirectURI: `http://${process.env.HOST}:${process.env.FE_PORT}/`,
+      });
     } else {
-      return res.status(400).send({message: 'Invalid OTP!'});
+      return res.status(400).send({ message: 'Invalid OTP!' });
     }
   }
 }

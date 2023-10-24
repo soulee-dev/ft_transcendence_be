@@ -1,11 +1,10 @@
-import {HttpException, Injectable} from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as speakeasy from 'speakeasy';
 import * as nodemailer from 'nodemailer';
-import {createClient} from "redis";
-import * as process from "process";
-
+import { createClient } from 'redis';
+import * as process from 'process';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +15,7 @@ export class AuthService {
     private prisma: PrismaService,
   ) {
     this.redisClient = createClient({
-      url: "redis://redis:6379"
+      url: 'redis://redis:6379',
     });
 
     this.initializeRedis();
@@ -37,8 +36,8 @@ export class AuthService {
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
   }
 
@@ -54,7 +53,7 @@ export class AuthService {
     const secret = speakeasy.generateSecret({ length: 20 });
     const otp = speakeasy.totp({
       secret: secret.base32,
-      encoding: 'base32'
+      encoding: 'base32',
     });
 
     this.redisClient.set(`2fa:${userId}`, otp);
@@ -67,7 +66,7 @@ export class AuthService {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Your 2FA Code',
-      text: `Your OTP is: ${otp}`
+      text: `Your OTP is: ${otp}\nYour code will be expired in 5 minutes.`,
     };
     await this.mailTransporter.sendMail(mailOptions);
   }
@@ -87,7 +86,12 @@ export class AuthService {
   }
 
   storeOAuthUserTemporarily(userId: string, user: any): void {
-    this.redisClient.set(`temp-user:${userId}`, JSON.stringify(user), 'EX', 600); // Expires in 10 minutes
+    this.redisClient.set(
+      `temp-user:${userId}`,
+      JSON.stringify(user),
+      'EX',
+      600,
+    ); // Expires in 10 minutes
   }
 
   async retrieveOAuthUserTemporarily(userId: string): Promise<any> {
@@ -113,13 +117,15 @@ export class AuthService {
           profile_image: user.profile_image,
           email: user.email,
           is_2fa: false,
-          status: "online",
+          status: 'online',
         },
       });
     }
     const payload = { sub: dbUser.id };
     // TODO: It should be initialized in .env
     // TODO: It should be removed in further version
-    return this.jwtService.sign(payload, {secret: process.env.YOUR_SECRET_KEY});
+    return this.jwtService.sign(payload, {
+      secret: process.env.YOUR_SECRET_KEY,
+    });
   }
 }
