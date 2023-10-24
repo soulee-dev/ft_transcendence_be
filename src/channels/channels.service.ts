@@ -96,9 +96,21 @@ export class ChannelsService {
       });
       if (!creator) throw new HttpException('Creator not found', HttpStatus.NOT_FOUND);
 
+      const existingDM = await this.prisma.channels.findFirst({
+        where: {
+          OR: [
+            { name: 'DM: ' + creator.name + ', ' + user.name},
+            { name: 'DM: ' + user.name + ', ' + creator.name}
+          ]
+        }
+      })
+
+      if (existingDM)
+        throw new HttpException('DM is existing', HttpStatus.BAD_REQUEST);
+
       const channel = await this.prisma.channels.create({
         data: {
-          name: creator.name + ', ' + user.name,
+          name: 'DM: ' + creator.name + ', ' + user.name,
           password: null,
         },
       });
@@ -143,6 +155,10 @@ export class ChannelsService {
     const {name, password, option, users} = channelData;
 
     try {
+      let editedName = name;
+      editedName  = editedName.trim().replace(/\s+/g, ' ');
+      if (editedName.startsWith("DM:"))
+        throw new HttpException('Unavailable channel name', HttpStatus.BAD_REQUEST);
       // Check if all user names are valid
       const invitedUsers = await this.prisma.users.findMany({
         where: {
@@ -157,7 +173,7 @@ export class ChannelsService {
       }
       const existingChannel = await this.prisma.channels.findUnique({
         where: {
-          name: name,
+          name: editedName,
         }
       })
       if (existingChannel)
@@ -165,7 +181,7 @@ export class ChannelsService {
       // Transaction 1: Create the channel
       const channel = await this.prisma.channels.create({
         data: {
-          name: name,
+          name: editedName,
           password: password,
         },
       });
@@ -288,6 +304,14 @@ export class ChannelsService {
       id: number,
       updateData: UpdateChannelDto,
   ) {
+
+    if (updateData.name) {
+      let editedName = updateData.name;
+      updateData.name = editedName.trim().replace(/\s+/g, ' ');
+      if (updateData.name.startsWith("DM:"))
+        throw new HttpException('Unavailable channel name', HttpStatus.BAD_REQUEST);
+    }
+
     const user = await this.prisma.channelUsers.findUnique({
       where: {
         user_id_channel_id: {
