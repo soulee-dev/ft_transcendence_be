@@ -37,21 +37,20 @@ export class AuthController {
       if (user.is_2fa === true) {
         const otp = this.authService.generateOTP(req.user.id);
         await this.authService.sendOtpEmail(req.user.email, otp);
-        const jwt = await this.authService.login(req.user, id); // JWT with '2fa': 'pending'
-        return res.cookie('access_token', jwt).send({
-          redirectURI: `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
-        });
+        return res.redirect(
+          `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
+        );
       }
       const jwt = await this.authService.login(req.user, id);
-      return res.cookie('access_token', jwt).send({
-        redirectURI: `http://${process.env.HOST}:${process.env.FE_PORT}/`,
-      });
+      return res
+        .cookie('access_token', jwt)
+        .redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
     } catch (error) {
       if (error instanceof NotFoundException) {
         const jwt = await this.authService.login(req.user, req.user.id);
-        return res.cookie('access_token', jwt).send({
-          redirectURI: `http://${process.env.HOST}:${process.env.FE_PORT}/`,
-        });
+        return res
+          .cookie('access_token', jwt)
+          .redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
       }
       return error;
     }
