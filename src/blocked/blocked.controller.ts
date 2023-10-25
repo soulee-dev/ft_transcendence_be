@@ -10,13 +10,14 @@ import {
   ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
+import {TwoFaGuard} from "../auth/two-fa.guard";
 
 @ApiTags("blocked")
 @Controller('blocked')
 export class BlockedController {
   constructor(private readonly blockedService: BlockedService) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve blocked users' })
@@ -27,7 +28,7 @@ export class BlockedController {
     return this.blockedService.getBlockedUser(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/add')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Block a user' })
@@ -39,7 +40,7 @@ export class BlockedController {
     return this.blockedService.blockUser(id, name);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/:blocked_id/delete')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Unblock a user' })

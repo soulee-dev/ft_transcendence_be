@@ -11,13 +11,14 @@ import {
   ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
+import {TwoFaGuard} from "../auth/two-fa.guard";
 
 @ApiTags("chat")
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/:channel_id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve chat messages from a channel' })
@@ -29,7 +30,7 @@ export class ChatController {
     return this.chatService.getChat(channel_id, id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/:channel_id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send a message to a channel' })

@@ -19,6 +19,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload) {
       throw new UnauthorizedException();
     }
-    return { id: payload.sub };
+    return {
+      id: payload.sub,
+      twofa: payload['2fa'],
+  };
   }
 }

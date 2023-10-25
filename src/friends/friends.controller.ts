@@ -10,13 +10,14 @@ import {
   ApiUnauthorizedResponse
 } from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
+import {TwoFaGuard} from "../auth/two-fa.guard";
 
 @ApiTags("friends")
 @Controller('friends')
 export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve all friends of the user' })
@@ -27,7 +28,7 @@ export class FriendsController {
     return this.friendsService.getFriends(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/add')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add a friend by name' })
@@ -39,7 +40,7 @@ export class FriendsController {
     return this.friendsService.addFriend(id, name);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/delete')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a friend by name' })
@@ -51,7 +52,7 @@ export class FriendsController {
     return this.friendsService.deleteFriend(id, name);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/requests')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve all friend requests of the user' })
@@ -62,7 +63,7 @@ export class FriendsController {
     return this.friendsService.getFriendRequests(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/request/:requestId/accept')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Accept a friend request by ID' })
@@ -74,7 +75,7 @@ export class FriendsController {
     return this.friendsService.acceptFriendRequest(requestId, id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/request/:requestId/decline')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Decline a friend request by ID' })

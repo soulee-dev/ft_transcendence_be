@@ -13,13 +13,14 @@ import {
 } from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
 import {id} from "date-fns/locale";
+import {TwoFaGuard} from "../auth/two-fa.guard";
 
 @ApiTags("users")
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve all users' })
@@ -30,7 +31,7 @@ export class UsersController {
   }
 
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve a my profile by ID' })
@@ -41,7 +42,7 @@ export class UsersController {
     return this.usersService.getUser(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/:id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve a user by ID' })
@@ -52,7 +53,7 @@ export class UsersController {
     return this.usersService.getUser(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/create')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new user' })
@@ -63,7 +64,7 @@ export class UsersController {
     return this.usersService.createUser(userData);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/me/update')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a user by ID' })
@@ -75,7 +76,7 @@ export class UsersController {
     return this.usersService.updateUser(id, userData);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/me/delete')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user by ID' })

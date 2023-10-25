@@ -15,13 +15,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { UserActionDto } from './dto/user-action.dto';
 import {ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {TwoFaGuard} from "../auth/two-fa.guard";
 
 @ApiTags("channels")
 @Controller('channels')
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve public channels' })
@@ -30,7 +31,7 @@ export class ChannelsController {
     return this.channelsService.getPublicChannels();
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/joined')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve joined channels' })
@@ -45,7 +46,7 @@ export class ChannelsController {
     return this.channelsService.getChannelsIn(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/:channel_id/users')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get users of a channel' })
@@ -57,7 +58,7 @@ export class ChannelsController {
     return this.channelsService.getChannelUsers(id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/create/:user_id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a direct message channel' })
@@ -74,7 +75,7 @@ export class ChannelsController {
     return this.channelsService.createDMChannel(user_id, creator);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/create')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new channel' })
@@ -91,7 +92,7 @@ export class ChannelsController {
     return this.channelsService.createChannel(channelData, id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/:channel_id/leave')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Leave a channel' })
@@ -108,7 +109,7 @@ export class ChannelsController {
     return this.channelsService.handleUserDeparture(channel_id, id);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/:channel_id/update')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a channel' })
@@ -131,7 +132,7 @@ export class ChannelsController {
     return this.channelsService.updateChannel(channel_id, id, updateData);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/:channel_id/admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Manage a channel as an admin' })
@@ -157,7 +158,7 @@ export class ChannelsController {
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/:channel_id/join')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Join a public channel' })
@@ -180,7 +181,7 @@ export class ChannelsController {
     return this.channelsService.joinPublicChannel(channel_id, id, password);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/join')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Join a private channel' })

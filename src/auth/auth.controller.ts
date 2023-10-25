@@ -37,8 +37,9 @@ export class AuthController {
       if (user.is_2fa === true) {
         const otp = this.authService.generateOTP(req.user.id);
         await this.authService.sendOtpEmail(req.user.email, otp);
-        return res.redirect(
-          `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
+        const jwt = await this.authService.login(req.user, id); // JWT with '2fa': 'pending'
+        return res.cookie('access_token', jwt).redirect(
+            `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
         );
       }
       const jwt = await this.authService.login(req.user, id);
@@ -72,7 +73,7 @@ export class AuthController {
     const { userId, otp } = otpData;
     const isValid = await this.authService.validateOTP(userId, otp);
     if (isValid) {
-      const jwt = await this.authService.login(req.user, parseInt(userId, 10));
+      const jwt = await this.authService.complete2fa(parseInt(userId, 10));
       return res.cookie('access_token', jwt).send({
         redirectURI: `http://${process.env.HOST}:${process.env.FE_PORT}/`,
       });

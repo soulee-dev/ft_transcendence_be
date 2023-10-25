@@ -3,9 +3,10 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {ChannelsGateway} from "../channels/channels.gateway";
+import {TwoFaGuard} from "../auth/two-fa.guard";
 
 @Module({
   controllers: [ChatController],
-  providers: [ChatService, PrismaService, ChannelsGateway],
+  providers: [ChatService, PrismaService, ChannelsGateway, TwoFaGuard],
 })
 export class ChatModule {}
