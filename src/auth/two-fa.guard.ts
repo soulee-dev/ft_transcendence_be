@@ -9,8 +9,7 @@ export class TwoFaGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
         const user = request.user;
 
-        if (user && user.hasOwnProperty('twofa') && user['twofa'] === 'pending') {
-            console.log('pending');
+        if (user && user.hasOwnProperty('twofa') && user['twofa'] === false) {
             if (request.path.startsWith('/auth/validate-otp')) {
                 return true;
             }

@@ -125,7 +125,7 @@ export class AuthService {
     // TODO: It should be initialized in .env
     // TODO: It should be removed in further version
     if (dbUser.is_2fa) {
-      payload['2fa'] = 'pending';
+      payload['2fa'] = false;
     }
     return this.jwtService.sign(payload, {
       secret: process.env.YOUR_SECRET_KEY,
@@ -136,7 +136,7 @@ export class AuthService {
     const dbUser = await this.prisma.users.findUnique({
       where: { id: userId },
     });
-    const payload = { sub: dbUser.id, '2fa': 'completed' };
+    const payload = { sub: dbUser.id, '2fa': true };
     return this.jwtService.sign(payload, {
       secret: process.env.YOUR_SECRET_KEY,
     });
