@@ -281,8 +281,8 @@ export class ChannelsService {
         const deletedOptions = await this.prisma.channelOptions.deleteMany({
             where: {channel_id: channelId},
           });
-        const deletedChat = await this.prisma.chat.delete({
-            where: {id: channelId},
+        const deletedChat = await this.prisma.chat.deleteMany({
+            where: {channel_id: channelId},
           });
         const deletedChannel = await this.prisma.channels.delete({
             where: {id: channelId},
