@@ -27,8 +27,9 @@ export class ChannelsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve public channels' })
   @ApiResponse({ status: 200, description: 'Public channels retrieved successfully' })
-  async getPublicChannels() {
-    return this.channelsService.getPublicChannels();
+  async getPublicChannels(@Req() req) {
+    const id = req.user.id;
+    return this.channelsService.getPublicChannels(id);
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)

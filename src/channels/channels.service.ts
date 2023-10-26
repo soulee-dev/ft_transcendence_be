@@ -20,28 +20,6 @@ export class ChannelsService {
       ) {
   }
 
-  async getPublicChannels() {
-    try {
-      const channelsId = await this.prisma.channelOptions.findMany({
-        select: {channel_id: true},
-        where: {option: ChannelOptions.Public},
-      });
-
-      const channelIds = channelsId.map((channel) => channel.channel_id);
-
-      const channels = await this.prisma.channels.findMany({
-        where: {
-          id: {
-            in: channelIds,
-          },
-        },
-      });
-      return channels;
-    } catch (error) {
-      console.error('Error getting channels:', error);
-      throw new HttpException('Failed to retrieve public channels', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
 
   async getChannelsIn(user_id: number) {
     try {
@@ -63,6 +41,33 @@ export class ChannelsService {
     } catch (error) {
       console.error('Error getting channels:', error);
       throw new HttpException('Failed to retrieve channels for the user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  async getPublicChannels(id: number) {
+    try {
+      const channelsId = await this.prisma.channelOptions.findMany({
+        select: {channel_id: true},
+        where: {option: ChannelOptions.Public},
+      });
+
+      const joinedChannels = await this.getChannelsIn(id);
+      const joinedChannelIds = joinedChannels.map(channel => channel.id);
+      const unjoinedChannelIds = channelsId.filter(channel => !joinedChannelIds.includes(channel.channel_id));
+
+
+      const channelIds = unjoinedChannelIds.map((channel) => channel.channel_id);
+
+      const channels = await this.prisma.channels.findMany({
+        where: {
+          id: {
+            in: channelIds,
+          },
+        },
+      });
+      return channels;
+    } catch (error) {
+      console.error('Error getting channels:', error);
+      throw new HttpException('Failed to retrieve public channels', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
