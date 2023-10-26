@@ -14,10 +14,18 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { UserActionDto } from './dto/user-action.dto';
-import {ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
-import {TwoFaGuard} from "../auth/two-fa.guard";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { TwoFaGuard } from '../auth/two-fa.guard';
 
-@ApiTags("channels")
+@ApiTags('channels')
 @Controller('channels')
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}
@@ -26,22 +34,41 @@ export class ChannelsController {
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve public channels' })
-  @ApiResponse({ status: 200, description: 'Public channels retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Public channels retrieved successfully',
+  })
   async getPublicChannels(@Req() req) {
     const id = req.user.id;
     return this.channelsService.getPublicChannels(id);
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/:name')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve channel by name' })
+  @ApiResponse({
+    status: 200,
+    description: 'Channel by name retrieved successfully',
+  })
+  @ApiParam({ name: 'channel_name', description: 'Name of the channel' })
+  async getChannelByName(@Param('name') name: string) {
+    return this.channelsService.getChannelByName(name);
+  }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/joined')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve joined channels' })
-  @ApiResponse({ status: 200, description: 'joined channels retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'joined channels retrieved successfully',
+  })
   async getChannelsIn(@Req() req: any) {
     const id = req.user.id;
     if (!id) {
       throw new UnauthorizedException(
-          'You need to be logged in to create a channel.',
+        'You need to be logged in to create a channel.',
       );
     }
     return this.channelsService.getChannelsIn(id);
@@ -63,9 +90,15 @@ export class ChannelsController {
   @Post('/create/:user_id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a direct message channel' })
-  @ApiResponse({ status: 201, description: 'Direct message channel created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Direct message channel created successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiParam({ name: 'user_id', description: 'ID of the user to create a DM channel with' })
+  @ApiParam({
+    name: 'user_id',
+    description: 'ID of the user to create a DM channel with',
+  })
   async createDMChannel(@Param('user_id') user_id: number, @Req() req: any) {
     const creator = req.user.id;
     if (!creator) {
@@ -117,7 +150,10 @@ export class ChannelsController {
   @ApiResponse({ status: 200, description: 'Channel updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Channel not found' })
-  @ApiParam({ name: 'channel_id', description: 'ID of the channel to be updated' })
+  @ApiParam({
+    name: 'channel_id',
+    description: 'ID of the channel to be updated',
+  })
   @ApiBody({ type: UpdateChannelDto })
   async updateChannel(
     @Param('channel_id') channel_id: number,
@@ -152,11 +188,7 @@ export class ChannelsController {
         'You need to be logged in to create a channel.',
       );
     }
-    return this.channelsService.manageChannel(
-      channel_id,
-      id,
-      managementData,
-    );
+    return this.channelsService.manageChannel(channel_id, id, managementData);
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
