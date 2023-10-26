@@ -193,21 +193,26 @@ export class ChannelsService {
             option: option,
           },
         });
-        const resultOfUsers = await this.prisma.channelUsers.createMany({
-          data: [
-            {
-              channel_id: channel.id,
-              user_id: id,
-              admin: true,
-            },
-            // Adding other users as non-admins
-            ...invitedUsers.map((user) => ({
-              channel_id: channel.id,
-              user_id: user.id,
-              admin: false,
-            })),
-          ],
+
+        const admin = await this.prisma.channelUsers.create({
+          data: {
+            channel_id: channel.id,
+            user_id: id,
+            admin: true,
+          }
         });
+        let nonAdminUser;
+        if (users.length) {
+          nonAdminUser = await this.prisma.channelUsers.createMany({
+            data: [
+              ...invitedUsers.map((user) => ({
+                channel_id: channel.id,
+                user_id: user.id,
+                admin: false,
+              })),
+            ],
+          });
+        }
         const payload: NotificationPayload = {
           type: "ADDED_TO_CHANNEL",
           channelId: channel.id,
@@ -220,7 +225,8 @@ export class ChannelsService {
       return {
         channel,
         resultOfOption,
-        resultOfUsers,
+        admin,
+        ...(nonAdminUser ? { nonAdminUser } : {}),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
