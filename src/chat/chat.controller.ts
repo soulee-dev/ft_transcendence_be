@@ -12,6 +12,7 @@ import {
 } from "@nestjs/swagger";
 import {AuthGuard} from "@nestjs/passport";
 import {TwoFaGuard} from "../auth/two-fa.guard";
+import {PasswordDto} from "./dto/password.dto";
 
 @ApiTags("chat")
 @Controller('chat')
@@ -25,9 +26,10 @@ export class ChatController {
   @ApiResponse({ status: 200, description: 'Chat messages retrieved successfully' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
-  async getChat(@Param('channel_id') channel_id: number, @Req() req) {
+  @ApiBody({ type: SendMessageDto })
+  async getChat(@Param('channel_id') channel_id: number, @Req() req, @Body() password: PasswordDto) {
     const id = req.user.id;
-    return this.chatService.getChat(channel_id, id);
+    return this.chatService.getChat(channel_id, id, password);
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
