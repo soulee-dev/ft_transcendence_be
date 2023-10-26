@@ -156,7 +156,9 @@ export class ChannelsService {
 
     try {
       let editedName = name;
-      editedName  = editedName.trim().replace(/\s+/g, ' ');
+      editedName = editedName.trim().replace(/\s+/g, ' ');
+      if (!editedName ?? editedName === '')
+        throw new HttpException('Unavailable channel name', HttpStatus.BAD_REQUEST);
       if (editedName.startsWith("DM:"))
         throw new HttpException('Unavailable channel name', HttpStatus.BAD_REQUEST);
       // Check if all user names are valid
@@ -169,7 +171,7 @@ export class ChannelsService {
       });
 
       if (invitedUsers.length !== users.length) {
-        throw new HttpException('Some users not found', HttpStatus.NOT_FOUND);
+        throw new HttpException('Some users not found', HttpStatus.BAD_REQUEST);
       }
       const existingChannel = await this.prisma.channels.findUnique({
         where: {
