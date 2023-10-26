@@ -85,25 +85,6 @@ export class AuthService {
     }
   }
 
-  storeOAuthUserTemporarily(userId: string, user: any): void {
-    this.redisClient.set(
-      `temp-user:${userId}`,
-      JSON.stringify(user),
-      'EX',
-      600,
-    ); // Expires in 10 minutes
-  }
-
-  async retrieveOAuthUserTemporarily(userId: string): Promise<any> {
-    try {
-      const storedTempUser = await this.redisClient.get(`temp-user:${userId}`);
-      return JSON.parse(storedTempUser);
-    } catch (error) {
-      console.error('Failed to get user:', error);
-      return null;
-    }
-  }
-
   async login(user: any, id: number): Promise<string> {
     let dbUser = await this.prisma.users.findUnique({
       where: { id: id },
