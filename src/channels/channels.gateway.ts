@@ -6,17 +6,22 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import {ChannelNotificationPayload} from "./channel-notification-payload.interface";
+import { ChannelNotificationPayload } from './channel-notification-payload.interface';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: `http://${process.env.HOST}:${process.env.FE_PORT}`,
+    credentials: true,
+  },
+})
 export class ChannelsGateway {
   @WebSocketServer()
   server: Server;
 
   @SubscribeMessage('joinChannel')
   handleJoinChannel(
-      @MessageBody() channelId: number,
-      @ConnectedSocket() client: Socket,
+    @MessageBody() channelId: number,
+    @ConnectedSocket() client: Socket,
   ) {
     client.join(channelId.toString());
     return { status: 'Joined channel', channelId };
@@ -24,8 +29,8 @@ export class ChannelsGateway {
 
   @SubscribeMessage('leaveChannel')
   handleLeaveChannel(
-      @MessageBody() channelId: number,
-      @ConnectedSocket() client: Socket,
+    @MessageBody() channelId: number,
+    @ConnectedSocket() client: Socket,
   ) {
     client.leave(channelId.toString());
     return { status: 'Left channel', channelId };
@@ -35,7 +40,7 @@ export class ChannelsGateway {
   handleLogout(@ConnectedSocket() client: Socket) {
     // 모든 채널에서 클라이언트를 제거
     const rooms = Object.keys(client.rooms);
-    rooms.forEach(room => client.leave(room));
+    rooms.forEach((room) => client.leave(room));
 
     return { status: 'Logged out and left all channels' };
   } // front: 로그아웃할때 emit
@@ -44,7 +49,10 @@ export class ChannelsGateway {
     this.server.to(channelId.toString()).emit('newMessage', message);
   }
 
-  sendNotificationToChannel(channelId: number, payload: ChannelNotificationPayload) {
+  sendNotificationToChannel(
+    channelId: number,
+    payload: ChannelNotificationPayload,
+  ) {
     this.server.to(channelId.toString()).emit('notification', payload);
   }
 }

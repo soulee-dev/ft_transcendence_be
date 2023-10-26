@@ -4,22 +4,26 @@ import {
   WebSocketServer,
   SubscribeMessage,
   OnGatewayConnection,
-  MessageBody, ConnectedSocket,
+  MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import {NotificationPayload} from "./notification-payload.interface";
+import { NotificationPayload } from './notification-payload.interface';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: `http://${process.env.HOST}:${process.env.FE_PORT}`,
+    credentials: true,
+  },
+})
 export class NotificationGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-
-
   @SubscribeMessage('joinNotificationChannel')
   handleJoinNotificationChannel(
-      @MessageBody() userId: number,
-      @ConnectedSocket() client: Socket,
+    @MessageBody() userId: number,
+    @ConnectedSocket() client: Socket,
   ) {
     client.join(userId.toString());
     return { status: 'Joined notification channel', userId };
