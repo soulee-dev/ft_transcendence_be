@@ -44,19 +44,6 @@ export class ChannelsController {
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
-  @Get('/:name')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Retrieve channel by name' })
-  @ApiResponse({
-    status: 200,
-    description: 'Channel by name retrieved successfully',
-  })
-  @ApiParam({ name: 'channel_name', description: 'Name of the channel' })
-  async getChannelByName(@Param('name') name: string) {
-    return this.channelsService.getChannelByName(name);
-  }
-
-  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/joined')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve joined channels' })
@@ -72,6 +59,18 @@ export class ChannelsController {
       );
     }
     return this.channelsService.getChannelsIn(id);
+  }
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/:name')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve channel by name' })
+  @ApiResponse({
+    status: 200,
+    description: 'Channel by name retrieved successfully',
+  })
+  @ApiParam({ name: 'channel_name', description: 'Name of the channel' })
+  async getChannelByName(@Param('name') name: string) {
+    return this.channelsService.getChannelByName(name);
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
