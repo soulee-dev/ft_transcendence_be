@@ -61,7 +61,7 @@ export class ChannelsController {
     return this.channelsService.getChannelsIn(id);
   }
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
-  @Get('/:name')
+  @Get('/search/:name')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve channel by name' })
   @ApiResponse({
