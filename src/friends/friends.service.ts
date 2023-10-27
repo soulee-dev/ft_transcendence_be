@@ -64,9 +64,9 @@ export class FriendsService {
       });
       const payload: NotificationPayload = {
         type: 'DECLINED_YOUR_REQ',
-        channelId: NaN,
-        userId: receiver_id,
-        message: `You have been declined your friend request: ${receiver_id}`,
+        channelId: null,
+        userId: sender_id,
+        message: `친구 요청 거절 당함`,
       };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
       return {
@@ -121,9 +121,9 @@ export class FriendsService {
       });
       const payload: NotificationPayload = {
         type: 'ACCEPTED_YOUR_REQ',
-        channelId: NaN,
-        userId: receiver_id,
-        message: `You have been declined your friend request: ${receiver_id}`,
+        channelId: null,
+        userId: sender_id,
+        message: `친구 요청 수락됨`,
       };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
       return {
@@ -197,9 +197,9 @@ export class FriendsService {
       });
       const payload: NotificationPayload = {
         type: 'REQUESTED_FRIEND',
-        channelId: NaN,
-        userId: senderId,
-        message: `You have requested friend: ${senderId}`,
+        channelId: null,
+        userId: receiverId,
+        message: `친구 요청이 왔습니다.`,
       };
       this.notificationGateway.sendNotificationToUser(receiverId, payload);
     } catch (error) {
@@ -253,9 +253,9 @@ export class FriendsService {
       });
       const payload: NotificationPayload = {
         type: 'DELETED_FRIEND',
-        channelId: NaN,
-        userId: id,
-        message: `You have requested friend: ${id}`,
+        channelId: null,
+        userId: friend.id,
+        message: `친구 삭제 당함`,
       };
       this.notificationGateway.sendNotificationToUser(friend.id, payload);
       return {
