@@ -7,6 +7,8 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { ChannelNotificationPayload } from './channel-notification-payload.interface';
+import { JwtWsGuard } from '../auth/jwt-ws.guard';
+import { UseGuards } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
@@ -14,6 +16,7 @@ import { ChannelNotificationPayload } from './channel-notification-payload.inter
     credentials: true,
   },
 })
+@UseGuards(JwtWsGuard)
 export class ChannelsGateway {
   @WebSocketServer()
   server: Server;
