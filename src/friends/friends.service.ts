@@ -23,7 +23,7 @@ export class FriendsService {
       });
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to get friends for user ${id}`);
+      throw new BadRequestException(`친구 불러오기 실패`);
     }
   }
 
@@ -34,9 +34,7 @@ export class FriendsService {
       });
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(
-        `Failed to get friend requests for user ${id}`,
-      );
+      throw new BadRequestException(`친구요청 불러오기 실패`);
     }
   }
 
@@ -50,12 +48,12 @@ export class FriendsService {
         },
       });
       if (!friendRequest) {
-        throw new NotFoundException('Friend request not found.');
+        throw new BadRequestException('해당 친구요청 없음');
       }
       const { sender_id, receiver_id } = friendRequest;
       if (receiver_id !== id) {
         throw new HttpException(
-          'Receiver ID does not match the request.',
+          '친구요청 수신자가 아님',
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -66,18 +64,16 @@ export class FriendsService {
         type: 'DECLINED_YOUR_REQ',
         channelId: null,
         userId: sender_id,
-        message: `친구 요청 거절 당함`,
+        message: `친구요청 거절 당함`,
       };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
       return {
         status: HttpStatus.NO_CONTENT,
-        message: 'Friend request declined successfully.',
+        message: '친구요청 거절 성공',
       };
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(
-        `Failed to decline friend request ${requestId}`,
-      );
+      throw error;
     }
   }
 
@@ -92,13 +88,13 @@ export class FriendsService {
       });
 
       if (!friendRequest) {
-        throw new NotFoundException('Friend request not found.');
+        throw new BadRequestException('해당 친구요청 없음');
       }
 
       const { sender_id, receiver_id } = friendRequest;
       if (receiver_id !== id) {
         throw new HttpException(
-          'Receiver ID does not match the request.',
+          '친구요청 수신자가 아님',
           HttpStatus.BAD_REQUEST,
         );
       }
@@ -128,13 +124,11 @@ export class FriendsService {
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
       return {
         status: HttpStatus.OK,
-        message: 'Friend request accepted successfully.',
+        message: '친구요청 수락 성공',
       };
     } catch (error) {
       console.error(error);
-      throw new BadRequestException(
-        `Failed to accept friend request ${requestId}`,
-      );
+      throw error;
     }
   }
 
@@ -148,9 +142,11 @@ export class FriendsService {
         })) || {};
 
       if (!receiverId) {
-        throw new NotFoundException(
-          `No user found with the name: ${friendName}`,
-        );
+        throw new BadRequestException(`${friendName} 유저 없음`);
+      }
+
+      if (senderId === receiverId) {
+        throw new BadRequestException('자기 자신을 친구로 추가할 수 없음');
       }
 
       const existingFriend1 = await this.prisma.friends.findUnique({
@@ -172,7 +168,7 @@ export class FriendsService {
       });
 
       if (existingFriend1 && existingFriend2) {
-        throw new BadRequestException('Friend already exists');
+        throw new BadRequestException('이미 친구임');
       }
 
       const existingRequest = await this.prisma.friendRequests.findUnique({
@@ -185,7 +181,7 @@ export class FriendsService {
       });
 
       if (existingRequest) {
-        throw new BadRequestException('Friend request already exists.');
+        throw new BadRequestException('이미 친구요청을 보냄');
       }
 
       const request = await this.prisma.friendRequests.create({
@@ -204,7 +200,7 @@ export class FriendsService {
       this.notificationGateway.sendNotificationToUser(receiverId, payload);
     } catch (error) {
       console.error(error);
-      throw new BadRequestException(`Failed to add friend ${friendName}`);
+      throw error;
     }
   }
 
@@ -217,9 +213,7 @@ export class FriendsService {
       });
 
       if (!friend) {
-        throw new NotFoundException(
-          `No user found with the name: ${friendName}`,
-        );
+        throw new BadRequestException(`${friendName} 유저 없음`);
       }
 
       const friendship1 = await this.prisma.friends.findUnique({
@@ -241,9 +235,7 @@ export class FriendsService {
       });
 
       if (!friendship1 || !friendship2) {
-        throw new NotFoundException(
-          `No friendship found between user ${id} and ${friendName}`,
-        );
+        throw new BadRequestException(`친구가 아님`);
       }
 
       await this.prisma.friends.deleteMany({
@@ -260,11 +252,11 @@ export class FriendsService {
       this.notificationGateway.sendNotificationToUser(friend.id, payload);
       return {
         status: HttpStatus.NO_CONTENT,
-        message: 'Friend deleted successfully',
+        message: '친구 삭제 성공',
       };
     } catch (error) {
       console.error(error);
-      throw new BadRequestException(`Failed to delete friend ${friendName}`);
+      throw error;
     }
   }
 }
