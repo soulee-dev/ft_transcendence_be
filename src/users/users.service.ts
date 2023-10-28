@@ -1,4 +1,9 @@
-import {BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException} from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,18 +17,18 @@ export class UsersService {
       return await this.prisma.users.findMany();
     } catch (error) {
       console.error(error);
-      throw new BadRequestException('Failed to get users');
+      throw new BadRequestException('유저 불러오기 실패');
     }
   }
 
   async getUser(id: number) {
     try {
       const user = await this.prisma.users.findUnique({ where: { id: id } });
-      if (!user) throw new NotFoundException(`User with id ${id} not found`);
+      if (!user) throw new BadRequestException(`해당 유저 없음`);
       return user;
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to get user with id ${id}`);
+      throw error;
     }
   }
 
@@ -34,7 +39,7 @@ export class UsersService {
       });
     } catch (error) {
       console.error(error);
-      throw new BadRequestException('Failed to create user');
+      throw new BadRequestException('유저 생성 실패');
     }
   }
 
@@ -44,10 +49,13 @@ export class UsersService {
         let editedName = userData.name;
         userData.name = editedName.trim().replace(/\s+/g, '');
       }
-      return await this.prisma.users.update({ where: { id: id }, data: userData });
+      return await this.prisma.users.update({
+        where: { id: id },
+        data: userData,
+      });
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to update user with id ${id}`);
+      throw new BadRequestException(`유저 정보 수정 실패`);
     }
   }
 
@@ -56,7 +64,7 @@ export class UsersService {
       return await this.prisma.users.delete({ where: { id: id } });
     } catch (error) {
       console.error(error);
-      throw new NotFoundException(`Failed to delete user with id ${id}`);
+      throw new BadRequestException(`유저 삭제 실패`);
     }
   }
 }

@@ -190,7 +190,7 @@ export class ChannelsService {
       const payload: NotificationPayload = {
         type: 'ADDED_TO_CHANNEL',
         channelId: channel.id,
-        userId: NaN,
+        userId: null,
         message: `You have been added to a new channel: ${channel.id}`,
       };
       this.notificationGateway.sendNotificationToUser(id, payload);
@@ -278,7 +278,7 @@ export class ChannelsService {
       const payload: NotificationPayload = {
         type: 'ADDED_TO_CHANNEL',
         channelId: channel.id,
-        userId: NaN,
+        userId: null,
         message: `You have been added to a new channel: ${channel.id}`,
       };
       invitedUsers.forEach((user) => {
@@ -426,7 +426,7 @@ export class ChannelsService {
       const payload: ChannelNotificationPayload = {
         type: 'CHANNEL_UPDATED',
         channelId: channelId,
-        userId: NaN,
+        userId: null,
         message: `Channel has been updated ${channelId}`,
       };
       this.channelsGateway.sendNotificationToChannel(channelId, payload);
@@ -494,7 +494,7 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'GIVEN_ADMIN',
           channelId: channelId,
-          userId: NaN,
+          userId: null,
           message: `You have given admin: ${channelId}`,
         };
         this.notificationGateway.sendNotificationToUser(id, payload);
@@ -505,7 +505,7 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'KICKED',
           channelId: channelId,
-          userId: NaN,
+          userId: null,
           message: `You have kicked: ${channelId}`,
         };
         this.notificationGateway.sendNotificationToUser(id, payload);
@@ -522,7 +522,7 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'BANNED',
           channelId: channelId,
-          userId: NaN,
+          userId: null,
           message: `You have banned: ${channelId}`,
         };
         this.notificationGateway.sendNotificationToUser(id, payload);
@@ -542,7 +542,7 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'MUTED',
           channelId: channelId,
-          userId: NaN,
+          userId: null,
           message: `You have muted: ${channelId}`,
         };
         this.notificationGateway.sendNotificationToUser(id, payload);
@@ -560,7 +560,7 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'UNBANNED',
           channelId: channelId,
-          userId: NaN,
+          userId: null,
           message: `You have unbanned: ${channelId}`,
         };
         this.notificationGateway.sendNotificationToUser(id, payload);

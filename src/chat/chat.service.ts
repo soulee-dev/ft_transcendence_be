@@ -1,13 +1,13 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
-import {ChannelsGateway} from "../channels/channels.gateway";
+import { ChannelsGateway } from '../channels/channels.gateway';
 
 @Injectable()
 export class ChatService {
   constructor(
-      private readonly prisma: PrismaService,
-      private readonly channelsGateway: ChannelsGateway
+    private readonly prisma: PrismaService,
+    private readonly channelsGateway: ChannelsGateway,
   ) {}
 
   async getChat(channelId: number, id: number) {
@@ -22,22 +22,24 @@ export class ChatService {
       });
 
       if (!user) {
-        throw new HttpException('You are not in the channel', HttpStatus.FORBIDDEN);
+        throw new HttpException('채팅방 유저 아님', HttpStatus.FORBIDDEN);
       }
-
 
       return await this.prisma.chat.findMany({
         where: { channel_id: channelId },
       });
     } catch (error) {
       console.error(error);
-      throw new HttpException('Failed to retrieve chat', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw error;
     }
   }
 
-  async sendMessage(channelId: number, senderId: number, messageData: SendMessageDto) {
+  async sendMessage(
+    channelId: number,
+    senderId: number,
+    messageData: SendMessageDto,
+  ) {
     try {
-
       const user = await this.prisma.channelUsers.findUnique({
         where: {
           user_id_channel_id: {
@@ -48,7 +50,7 @@ export class ChatService {
       });
 
       if (!user) {
-        throw new HttpException('You are not in the channel', HttpStatus.FORBIDDEN);
+        throw new HttpException('채팅방 유저 아님', HttpStatus.FORBIDDEN);
       }
 
       const mute = await this.prisma.channelMutes.findUnique({
@@ -61,7 +63,7 @@ export class ChatService {
       });
 
       if (mute) {
-        throw new HttpException('You are muted in the channel', HttpStatus.FORBIDDEN);
+        throw new HttpException('채팅방에서 뮤트 당함', HttpStatus.FORBIDDEN);
       }
 
       const newMessage = await this.prisma.chat.create({
@@ -75,7 +77,7 @@ export class ChatService {
       return newMessage;
     } catch (error) {
       console.error(error);
-      throw new HttpException('Failed to send message', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw error;
     }
   }
 }
