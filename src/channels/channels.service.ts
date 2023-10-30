@@ -301,7 +301,7 @@ export class ChannelsService {
         userId: null,
         message: `채팅방에 초대되었습니다`,
       };
-      invitedUsers.forEach((user) => {
+      filteredUsers.forEach((user) => {
         this.notificationGateway.sendNotificationToUser(user.id, payload);
       });
       return {
