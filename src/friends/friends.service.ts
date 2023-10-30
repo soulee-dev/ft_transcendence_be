@@ -63,7 +63,7 @@ export class FriendsService {
       const payload: NotificationPayload = {
         type: 'DECLINED_YOUR_REQ',
         channelId: null,
-        userId: sender_id,
+        userId: receiver_id,
         message: `친구요청 거절 당함`,
       };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
@@ -118,7 +118,7 @@ export class FriendsService {
       const payload: NotificationPayload = {
         type: 'ACCEPTED_YOUR_REQ',
         channelId: null,
-        userId: sender_id,
+        userId: receiver_id,
         message: `친구 요청 수락됨`,
       };
       this.notificationGateway.sendNotificationToUser(sender_id, payload);
@@ -194,7 +194,7 @@ export class FriendsService {
       const payload: NotificationPayload = {
         type: 'REQUESTED_FRIEND',
         channelId: null,
-        userId: receiverId,
+        userId: senderId,
         message: `친구 요청이 왔습니다.`,
       };
       this.notificationGateway.sendNotificationToUser(receiverId, payload);
@@ -246,7 +246,7 @@ export class FriendsService {
       const payload: NotificationPayload = {
         type: 'DELETED_FRIEND',
         channelId: null,
-        userId: friend.id,
+        userId: id,
         message: `친구 삭제 당함`,
       };
       this.notificationGateway.sendNotificationToUser(friend.id, payload);
