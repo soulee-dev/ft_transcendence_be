@@ -15,7 +15,8 @@ export interface NotificationPayload {
     | 'USER_QUIT_CHANNEL'
     | 'USER_JOIN_CHANNEL'
     | 'CHANNEL_UPDATED'
-    | 'SENT_MESSAGE';
+    | 'SENT_MESSAGE'
+    | 'PUBLIC_CHANNEL_CREATED';
   channelId: number;
   userId: number;
   message: string;

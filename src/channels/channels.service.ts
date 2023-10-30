@@ -304,6 +304,17 @@ export class ChannelsService {
       filteredUsers.forEach((user) => {
         this.notificationGateway.sendNotificationToUser(user.id, payload);
       });
+      if (option === ChannelOptions.Public) {
+        const publicPayload: NotificationPayload = {
+          type: 'PUBLIC_CHANNEL_CREATED',
+          channelId: channel.id,
+          userId: null,
+          message: `공개 채팅방이 생성되었습니다`,
+        };
+        this.notificationGateway.sendNotificationToAllActiveUsers(
+          publicPayload,
+        );
+      }
       return {
         channel,
         resultOfOption,
@@ -689,7 +700,6 @@ export class ChannelsService {
       users.forEach((user) => {
         this.notificationGateway.sendNotificationToUser(user.user_id, payload);
       });
-      this.notificationGateway.sendNotificationToAllActiveUsers(payload);
       return joinedUser;
     } catch (error) {
       console.error(error);
