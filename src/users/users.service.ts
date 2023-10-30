@@ -28,7 +28,7 @@ export class UsersService {
       return user;
     } catch (error) {
       console.error(error);
-      throw error;
+      return error;
     }
   }
 
