@@ -6,17 +6,14 @@ import { UpdateChannelDto } from './dto/update-channel.dto';
 import { UserActionDto } from './dto/user-action.dto';
 import { UserAction } from './enum/user-action.enum';
 import { addMinutes } from 'date-fns';
-import { ChannelsGateway } from './channels.gateway';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { NotificationPayload } from '../notification/notification-payload.interface';
-import { ChannelNotificationPayload } from './channel-notification-payload.interface';
 
 @Injectable()
 export class ChannelsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationGateway: NotificationGateway,
-    private readonly channelsGateway: ChannelsGateway,
   ) {}
 
   async getChannelsIn(user_id: number) {
@@ -46,7 +43,7 @@ export class ChannelsService {
     } catch (error) {
       console.error('Error getting channels:', error);
       throw new HttpException(
-        'Failed to retrieve channels for the user',
+        '참여한 채팅방을 찾을 수 없음',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -60,7 +57,10 @@ export class ChannelsService {
         },
       });
       if (!channel) {
-        throw new HttpException('Invalid name', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          '해당 이름의 채팅방 없음',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       if (channel.password) {
         return { ...channel, password: true };
@@ -107,7 +107,7 @@ export class ChannelsService {
     } catch (error) {
       console.error('Error getting channels:', error);
       throw new HttpException(
-        'Failed to retrieve public channels',
+        '공개 채팅방 불러오기 실패',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -122,7 +122,7 @@ export class ChannelsService {
     } catch (error) {
       console.error('Error getting channelUsers', error);
       throw new HttpException(
-        'Failed to retrieve users for the channel',
+        '채팅방 멤버 불러오기 실패',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -137,7 +137,7 @@ export class ChannelsService {
         },
       });
       if (!user)
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        throw new HttpException('해당 유저 없음', HttpStatus.BAD_REQUEST);
 
       const creator = await this.prisma.users.findUnique({
         select: { name: true },
@@ -146,7 +146,7 @@ export class ChannelsService {
         },
       });
       if (!creator)
-        throw new HttpException('Creator not found', HttpStatus.NOT_FOUND);
+        throw new HttpException('채팅방 생성자 없음', HttpStatus.BAD_REQUEST);
 
       const existingDM = await this.prisma.channels.findFirst({
         where: {
@@ -158,7 +158,7 @@ export class ChannelsService {
       });
 
       if (existingDM)
-        throw new HttpException('DM is existing', HttpStatus.BAD_REQUEST);
+        throw new HttpException('이미 존재하는 DM', HttpStatus.BAD_REQUEST);
 
       const channel = await this.prisma.channels.create({
         data: {
@@ -191,17 +191,14 @@ export class ChannelsService {
         type: 'ADDED_TO_CHANNEL',
         channelId: channel.id,
         userId: null,
-        message: `You have been added to a new channel: ${channel.id}`,
+        message: `DM 채팅방에 초대되었습니다`,
       };
       this.notificationGateway.sendNotificationToUser(id, payload);
       return { channel, resultOfOption, resultOfUsers };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       console.error('Error creating DM channel:', error);
-      throw new HttpException(
-        'Failed to create DM channel',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -213,12 +210,12 @@ export class ChannelsService {
       editedName = editedName.trim().replace(/\s+/g, ' ');
       if (!editedName ?? editedName === '')
         throw new HttpException(
-          'Unavailable channel name',
+          '올바르지 않은 채팅방 이름',
           HttpStatus.BAD_REQUEST,
         );
       if (editedName.startsWith('DM:'))
         throw new HttpException(
-          'Unavailable channel name',
+          '다음의 형식을 포함할 수 없음: DM:',
           HttpStatus.BAD_REQUEST,
         );
       // Check if all user names are valid
@@ -231,7 +228,10 @@ export class ChannelsService {
       });
 
       if (invitedUsers.length !== users.length) {
-        throw new HttpException('Some users not found', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          '초대할 유저중 존재 하지 않는 유저가 있음',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       const existingChannel = await this.prisma.channels.findUnique({
         where: {
@@ -239,7 +239,7 @@ export class ChannelsService {
         },
       });
       if (existingChannel)
-        throw new HttpException('Name already existed', HttpStatus.CONFLICT);
+        throw new HttpException('이미 존재하는 이름', HttpStatus.CONFLICT);
       // Transaction 1: Create the channel
       const channel = await this.prisma.channels.create({
         data: {
@@ -279,7 +279,7 @@ export class ChannelsService {
         type: 'ADDED_TO_CHANNEL',
         channelId: channel.id,
         userId: null,
-        message: `You have been added to a new channel: ${channel.id}`,
+        message: `채팅방에 초대되었습니다`,
       };
       invitedUsers.forEach((user) => {
         this.notificationGateway.sendNotificationToUser(user.id, payload);
@@ -295,16 +295,7 @@ export class ChannelsService {
 
       // Log error details for debugging
       console.error('Error creating channel:', error);
-
-      // Decide how to handle the error:
-      // - Re-throw the error, or
-      // - Return a failure status/object, or
-      // - Throw a different error, etc.
-
-      throw new HttpException(
-        'Failed to create channel',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -317,10 +308,7 @@ export class ChannelsService {
         },
       });
       if (channelOption.option === ChannelOptions.Dm)
-        throw new HttpException(
-          'You cannot leave a DM',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new HttpException('DM 나갈 수 없음', HttpStatus.BAD_REQUEST);
       // you cannot leave DM
       await this.prisma.channelUsers.delete({
         where: {
@@ -360,22 +348,39 @@ export class ChannelsService {
           deletedChannel,
         };
       }
-      const payload: ChannelNotificationPayload = {
-        type: 'USER_QUIT',
+
+      const userName = await this.prisma.users.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          name: true,
+        },
+      });
+
+      const users = await this.prisma.channelUsers.findMany({
+        where: {
+          channel_id: channelId,
+        },
+      });
+
+      const filteredUsers = users.filter((user) => user.user_id !== id);
+
+      const payload: NotificationPayload = {
+        type: 'USER_QUIT_CHANNEL',
         channelId: channelId,
         userId: id,
-        message: `user ${id} quited this channel ${channelId}`,
+        message: `${userName.name} 유저가 나감`,
       };
-      this.channelsGateway.sendNotificationToChannel(channelId, payload);
+      filteredUsers.forEach((user) => {
+        this.notificationGateway.sendNotificationToUser(user.user_id, payload);
+      });
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
       // Handle errors (e.g., log them and/or throw an exception)
       console.error(error);
-      throw new HttpException(
-        'Failed to handle user departure',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -389,7 +394,7 @@ export class ChannelsService {
       updateData.name = editedName.trim().replace(/\s+/g, ' ');
       if (updateData.name.startsWith('DM:'))
         throw new HttpException(
-          'Unavailable channel name',
+          '다음의 형식을 포함할 수 없음: DM:',
           HttpStatus.BAD_REQUEST,
         );
     }
@@ -403,7 +408,7 @@ export class ChannelsService {
       },
     });
     if (user.admin === false)
-      throw new HttpException('You are not an admin', HttpStatus.FORBIDDEN); //error: you are not admin
+      throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN); //error: you are not admin
 
     const channelOption = await this.prisma.channelOptions.findUnique({
       where: {
@@ -414,32 +419,32 @@ export class ChannelsService {
       channelOption.option === ChannelOptions.Dm ||
       updateData.option === ChannelOptions.Dm
     )
-      throw new HttpException(
-        'Cannot change DM option',
-        HttpStatus.BAD_REQUEST,
-      ); // cannot change DM option
+      throw new HttpException('DM 옵션 변경 불가', HttpStatus.BAD_REQUEST); // cannot change DM option
     try {
       const updatedChannel = await this.prisma.channels.update({
         where: { id: channelId },
         data: updateData,
       });
-      const payload: ChannelNotificationPayload = {
+      const users = await this.prisma.channelUsers.findMany({
+        where: {
+          channel_id: channelId,
+        },
+      });
+      const payload: NotificationPayload = {
         type: 'CHANNEL_UPDATED',
         channelId: channelId,
         userId: null,
-        message: `Channel has been updated ${channelId}`,
+        message: `채팅방 정보가 변경됨`,
       };
-      this.channelsGateway.sendNotificationToChannel(channelId, payload);
+      users.forEach((user) => {
+        this.notificationGateway.sendNotificationToUser(user.user_id, payload);
+      });
       return updatedChannel;
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
-      // Handle errors appropriately
       console.error(error);
-      throw new HttpException(
-        'Failed to update channel',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -455,7 +460,7 @@ export class ChannelsService {
         },
       });
       if (channelOption.option === ChannelOptions.Dm)
-        throw new HttpException('DM cannot be updated', HttpStatus.BAD_REQUEST);
+        throw new HttpException('DM 수정 불가', HttpStatus.BAD_REQUEST);
 
       const admin = await this.prisma.channelUsers.findUnique({
         where: {
@@ -466,7 +471,7 @@ export class ChannelsService {
         },
       });
       if (!admin || admin.admin === false)
-        throw new HttpException('You are not an admin', HttpStatus.FORBIDDEN);
+        throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN);
 
       const { id, action } = managementData;
       const user = await this.prisma.channelUsers.findUnique({
@@ -478,7 +483,21 @@ export class ChannelsService {
         },
       });
       if (!user)
-        throw new HttpException('User is not in channel', HttpStatus.NOT_FOUND);
+        throw new HttpException('해당 유저 없음', HttpStatus.BAD_REQUEST);
+      const users = await this.prisma.channelUsers.findMany({
+        where: {
+          channel_id: channelId,
+        },
+      });
+
+      const userName = await this.prisma.users.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          name: true,
+        },
+      });
       if (action === UserAction.GiveAdmin) {
         const userState = await this.prisma.channelUsers.update({
           where: {
@@ -494,10 +513,15 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'GIVEN_ADMIN',
           channelId: channelId,
-          userId: null,
-          message: `You have given admin: ${channelId}`,
+          userId: id,
+          message: `${userName.name} 유저에게 관리자 권한 부여됨`,
         };
-        this.notificationGateway.sendNotificationToUser(id, payload);
+        users.forEach((user) => {
+          this.notificationGateway.sendNotificationToUser(
+            user.user_id,
+            payload,
+          );
+        });
         return userState;
       }
       if (action === UserAction.Kick) {
@@ -505,14 +529,19 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'KICKED',
           channelId: channelId,
-          userId: null,
-          message: `You have kicked: ${channelId}`,
+          userId: id,
+          message: `${userName.name} 유저가 강퇴됨`,
         };
-        this.notificationGateway.sendNotificationToUser(id, payload);
+        users.forEach((user) => {
+          this.notificationGateway.sendNotificationToUser(
+            user.user_id,
+            payload,
+          );
+        });
         return userState;
       }
       if (action === UserAction.Ban) {
-        this.handleUserDeparture(channelId, id);
+        await this.handleUserDeparture(channelId, id);
         const userState = await this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
@@ -522,10 +551,15 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'BANNED',
           channelId: channelId,
-          userId: null,
-          message: `You have banned: ${channelId}`,
+          userId: id,
+          message: `${userName.name} 유저가 차단됨`,
         };
-        this.notificationGateway.sendNotificationToUser(id, payload);
+        users.forEach((user) => {
+          this.notificationGateway.sendNotificationToUser(
+            user.user_id,
+            payload,
+          );
+        });
         return userState;
       }
       if (action === UserAction.Mute) {
@@ -542,10 +576,15 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'MUTED',
           channelId: channelId,
-          userId: null,
-          message: `You have muted: ${channelId}`,
+          userId: id,
+          message: `${userName.name} 유저가 뮤트됨`,
         };
-        this.notificationGateway.sendNotificationToUser(id, payload);
+        users.forEach((user) => {
+          this.notificationGateway.sendNotificationToUser(
+            user.user_id,
+            payload,
+          );
+        });
         return userState;
       }
       if (action === UserAction.UnBan) {
@@ -560,18 +599,20 @@ export class ChannelsService {
         const payload: NotificationPayload = {
           type: 'UNBANNED',
           channelId: channelId,
-          userId: null,
-          message: `You have unbanned: ${channelId}`,
+          userId: id,
+          message: `${userName.name} 유저가 차단 해제됨`,
         };
-        this.notificationGateway.sendNotificationToUser(id, payload);
+        users.forEach((user) => {
+          this.notificationGateway.sendNotificationToUser(
+            user.user_id,
+            payload,
+          );
+        });
         return userState;
       }
     } catch (error) {
       console.error(error);
-      throw new HttpException(
-        'Unexpected error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -585,8 +626,7 @@ export class ChannelsService {
           },
         },
       });
-      if (banned)
-        throw new HttpException('You are banned', HttpStatus.FORBIDDEN);
+      if (banned) throw new HttpException('차단 당함', HttpStatus.FORBIDDEN);
 
       const channel = await this.prisma.channels.findUnique({
         where: {
@@ -594,7 +634,10 @@ export class ChannelsService {
         },
       });
       if (channel.password !== password)
-        throw new HttpException('Incorrect password', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          '올바르지 않은 비밀번호',
+          HttpStatus.BAD_REQUEST,
+        );
 
       const joinedUser = await this.prisma.channelUsers.create({
         data: {
@@ -603,20 +646,33 @@ export class ChannelsService {
           admin: false,
         },
       });
-      const payload: ChannelNotificationPayload = {
-        type: 'USER_JOIN',
+
+      const users = await this.prisma.channelUsers.findMany({
+        where: {
+          channel_id: channelId,
+        },
+      });
+      const user = await this.prisma.users.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          name: true,
+        },
+      });
+      const payload: NotificationPayload = {
+        type: 'USER_JOIN_CHANNEL',
         channelId: channelId,
         userId: id,
-        message: `user ${id} joined this channel ${channelId}`,
+        message: `${user.name} 유저가 참여함`,
       };
-      this.channelsGateway.sendNotificationToChannel(channelId, payload);
+      users.forEach((user) => {
+        this.notificationGateway.sendNotificationToUser(user.user_id, payload);
+      });
       return joinedUser;
     } catch (error) {
       console.error(error);
-      throw new HttpException(
-        'Unexpected error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 
@@ -628,7 +684,10 @@ export class ChannelsService {
         },
       });
       if (!channel) {
-        throw new HttpException('Channel not found', HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          '해당 이름의 채널 없음',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const banned = await this.prisma.channelBans.findUnique({
@@ -640,11 +699,14 @@ export class ChannelsService {
         },
       });
       if (banned) {
-        throw new HttpException('You are banned', HttpStatus.FORBIDDEN);
+        throw new HttpException('차단 당함', HttpStatus.FORBIDDEN);
       }
 
       if (channel.password !== password) {
-        throw new HttpException('Incorrect password', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          '올바르지 않은 비밀번호',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const joinedUser = await this.prisma.channelUsers.create({
@@ -654,13 +716,28 @@ export class ChannelsService {
           admin: false,
         },
       });
-      const payload: ChannelNotificationPayload = {
-        type: 'USER_JOIN',
+      const users = await this.prisma.channelUsers.findMany({
+        where: {
+          channel_id: channel.id,
+        },
+      });
+      const user = await this.prisma.users.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          name: true,
+        },
+      });
+      const payload: NotificationPayload = {
+        type: 'USER_JOIN_CHANNEL',
         channelId: channel.id,
         userId: id,
-        message: `user ${id} quited this channel ${channel.id}`,
+        message: `${user.name} 유저가 참여함`,
       };
-      this.channelsGateway.sendNotificationToChannel(channel.id, payload);
+      users.forEach((user) => {
+        this.notificationGateway.sendNotificationToUser(user.user_id, payload);
+      });
       return joinedUser;
     } catch (error) {
       console.error(error);

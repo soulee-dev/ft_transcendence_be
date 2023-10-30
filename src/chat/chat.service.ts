@@ -1,13 +1,14 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
-import { ChannelsGateway } from '../channels/channels.gateway';
+import { NotificationGateway } from '../notification/notification.gateway';
+import { NotificationPayload } from '../notification/notification-payload.interface';
 
 @Injectable()
 export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly channelsGateway: ChannelsGateway,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   async getChat(channelId: number, id: number) {
@@ -66,6 +67,14 @@ export class ChatService {
         throw new HttpException('채팅방에서 뮤트 당함', HttpStatus.FORBIDDEN);
       }
 
+      const users = await this.prisma.channelUsers.findMany({
+        where: {
+          channel_id: channelId,
+        },
+      });
+
+      const filteredUsers = users.filter((user) => user.user_id !== senderId);
+
       const newMessage = await this.prisma.chat.create({
         data: {
           channel_id: channelId,
@@ -73,7 +82,15 @@ export class ChatService {
           ...messageData,
         },
       });
-      this.channelsGateway.sendMessageToChannel(channelId, newMessage.message);
+      const payload: NotificationPayload = {
+        type: 'SENT_MESSAGE',
+        channelId: channelId,
+        userId: senderId,
+        message: messageData.message,
+      };
+      filteredUsers.forEach((user) => {
+        this.notificationGateway.sendNotificationToUser(user.user_id, payload);
+      });
       return newMessage;
     } catch (error) {
       console.error(error);
