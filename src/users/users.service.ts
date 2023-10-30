@@ -28,7 +28,21 @@ export class UsersService {
       return user;
     } catch (error) {
       console.error(error);
-      return error;
+      throw error;
+    }
+  }
+
+  async getUserByName(name: string) {
+    try {
+      name = name.trim().replace(/\s+/g, '');
+      const user = await this.prisma.users.findUnique({
+        where: { name: name },
+      });
+      if (!user) throw new BadRequestException(`해당 유저 없음`);
+      return user;
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
   }
 

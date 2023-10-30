@@ -1,4 +1,13 @@
-import {Body, Controller, Get, Param, Post, Req, UseGuards} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -7,15 +16,17 @@ import {
   ApiBody,
   ApiOkResponse,
   ApiOperation,
-  ApiParam, ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
   ApiTags,
-  ApiUnauthorizedResponse
-} from "@nestjs/swagger";
-import {AuthGuard} from "@nestjs/passport";
-import {id} from "date-fns/locale";
-import {TwoFaGuard} from "../auth/two-fa.guard";
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { id } from 'date-fns/locale';
+import { TwoFaGuard } from '../auth/two-fa.guard';
 
-@ApiTags("users")
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -30,7 +41,6 @@ export class UsersController {
     return this.usersService.getUsers();
   }
 
-
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Get('/me')
   @ApiBearerAuth()
@@ -43,7 +53,18 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
-  @Get('/:id')
+  @Get('/name/:name')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve a user by name' })
+  @ApiOkResponse({ description: 'User retrieved by name successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiParam({ name: 'name', description: 'Name of the user to retrieve' })
+  async getUserByName(@Param('name') name: string) {
+    return this.usersService.getUserByName(name);
+  }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/id/:id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retrieve a user by ID' })
   @ApiOkResponse({ description: 'User retrieved successfully' })

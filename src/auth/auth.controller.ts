@@ -6,6 +6,7 @@ import {
   Res,
   Post,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -38,16 +39,18 @@ export class AuthController {
         const otp = this.authService.generateOTP(req.user.id);
         await this.authService.sendOtpEmail(req.user.email, otp);
         const jwt = await this.authService.login(req.user, id); // JWT with '2fa': 'pending'
-        return res.cookie('access_token', jwt).redirect(
-          `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
-        );
+        return res
+          .cookie('access_token', jwt)
+          .redirect(
+            `http://${process.env.HOST}:${process.env.FE_PORT}/2fa/${req.user.id}`,
+          );
       }
       const jwt = await this.authService.login(req.user, id);
       return res
         .cookie('access_token', jwt)
         .redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof BadRequestException) {
         const jwt = await this.authService.login(req.user, req.user.id);
         return res
           .cookie('access_token', jwt)
