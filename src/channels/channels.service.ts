@@ -669,6 +669,7 @@ export class ChannelsService {
       users.forEach((user) => {
         this.notificationGateway.sendNotificationToUser(user.user_id, payload);
       });
+      this.notificationGateway.sendNotificationToAllActiveUsers(payload);
       return joinedUser;
     } catch (error) {
       console.error(error);
