@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -183,7 +184,17 @@ export class FriendsService {
       if (existingRequest) {
         throw new BadRequestException('이미 친구요청을 보냄');
       }
-
+      const blocked = await this.prisma.blockedUsers.findUnique({
+        where: {
+          user_id_blocked_by: {
+            user_id: senderId,
+            blocked_by: receiverId,
+          },
+        },
+      });
+      if (blocked) {
+        throw new HttpException('차단 당함', HttpStatus.FORBIDDEN);
+      }
       const request = await this.prisma.friendRequests.create({
         data: {
           sender_id: senderId,
@@ -198,6 +209,7 @@ export class FriendsService {
         message: `친구 요청이 왔습니다.`,
       };
       this.notificationGateway.sendNotificationToUser(receiverId, payload);
+      return request;
     } catch (error) {
       console.error(error);
       throw error;

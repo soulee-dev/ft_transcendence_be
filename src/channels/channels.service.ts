@@ -148,6 +148,15 @@ export class ChannelsService {
       if (!creator)
         throw new HttpException('채팅방 생성자 없음', HttpStatus.BAD_REQUEST);
 
+      const blocked = await this.prisma.blockedUsers.findUnique({
+        where: {
+          user_id_blocked_by: {
+            user_id: creatorId,
+            blocked_by: id,
+          },
+        },
+      });
+      if (blocked) throw new HttpException('차단 당했음', HttpStatus.FORBIDDEN);
       const existingDM = await this.prisma.channels.findFirst({
         where: {
           OR: [
@@ -263,11 +272,22 @@ export class ChannelsService {
           admin: true,
         },
       });
+
+      const blocked = await this.prisma.blockedUsers.findMany({
+        where: {
+          user_id: id,
+        },
+      });
+      const blockedByUserIds = blocked.map((b) => b.blocked_by);
+      const filteredUsers = invitedUsers.filter(
+        (user) => !blockedByUserIds.includes(user.id),
+      );
+
       let nonAdminUser;
-      if (users.length) {
+      if (filteredUsers.length) {
         nonAdminUser = await this.prisma.channelUsers.createMany({
           data: [
-            ...invitedUsers.map((user) => ({
+            ...filteredUsers.map((user) => ({
               channel_id: channel.id,
               user_id: user.id,
               admin: false,

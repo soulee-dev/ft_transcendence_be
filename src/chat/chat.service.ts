@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { NotificationPayload } from '../notification/notification-payload.interface';
+import { ChannelOption } from '@prisma/client';
 
 @Injectable()
 export class ChatService {
@@ -54,6 +55,32 @@ export class ChatService {
         throw new HttpException('채팅방 유저 아님', HttpStatus.FORBIDDEN);
       }
 
+      const channelOption = await this.prisma.channelOptions.findUnique({
+        where: {
+          channel_id: channelId,
+        },
+      });
+      if (channelOption.option === ChannelOption.DM) {
+        const channelUsers = await this.prisma.channelUsers.findMany({
+          where: {
+            channel_id: channelId,
+          },
+        });
+        const blocked_by = channelUsers.filter(
+          (user) => user.user_id !== senderId,
+        );
+        const blocked = await this.prisma.blockedUsers.findUnique({
+          where: {
+            user_id_blocked_by: {
+              user_id: senderId,
+              blocked_by: blocked_by[0].user_id,
+            },
+          },
+        });
+        if (blocked) {
+          throw new HttpException('차단 당했음', HttpStatus.FORBIDDEN);
+        }
+      }
       const mute = await this.prisma.channelMutes.findUnique({
         where: {
           channel_id_user_id: {
