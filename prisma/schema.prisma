@@ -25,7 +25,8 @@ model Users {
   chats          Chat[]
   sentRequests   FriendRequests[] @relation("FriendRequests_sender_id_ToUsers")
   receivedRequests FriendRequests[] @relation("FriendRequests_receiver_id_ToUsers")
-
+  gamesAsPlayer1   Games[] @relation("Games_player1_id_ToUsers")
+  gamesAsPlayer2   Games[] @relation("Games_player2_id_ToUsers")
   @@unique([name])
 }
 
@@ -130,4 +131,14 @@ model Chat {
   message    String   @db.Text
   channel    Channels @relation(fields: [channel_id], references: [id])
   sent_by       Users    @relation(fields: [sent_by_id], references: [id])
+}
+
+model Games {
+  id          Int      @id @default(autoincrement())
+  player1_id  Int
+  player2_id  Int?
+  score1      Int?
+  score2      Int?
+  player1     Users    @relation(fields: [player1_id], references: [id], name: "Games_player1_id_ToUsers")
+  player2     Users?    @relation(fields: [player2_id], references: [id], name: "Games_player2_id_ToUsers")
 }

@@ -38,7 +38,7 @@ export class NotificationGateway implements OnGatewayConnection {
   @SubscribeMessage('leaveNotificationChannel')
   handleLeaveNotificationChannel(@ConnectedSocket() client: ExtendedSocket) {
     const userId = client.user.sub;
-    client.leave('notificationChannel');
+    client.leave(userId.toString());
     this.activeUsers.delete(userId);
     console.log(`User ${client.id} left the notification channel`);
     return { status: 'Left the notification channel' };

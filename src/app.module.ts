@@ -19,6 +19,7 @@ import { ChannelsModule } from './channels/channels.module';
 import { CronJobsService } from './cron-jobs/cron-jobs.service';
 import { CronJobsModule } from './cron-jobs/cron-jobs.module';
 import { NotificationGateway } from './notification/notification.gateway';
+import { GamesModule } from './games/games.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { NotificationGateway } from './notification/notification.gateway';
     BlockedModule,
     ChannelsModule,
     CronJobsModule,
+    GamesModule,
   ],
   controllers: [
     AppController,
