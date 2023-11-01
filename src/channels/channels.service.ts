@@ -772,10 +772,7 @@ export class ChannelsService {
       return joinedUser;
     } catch (error) {
       console.error(error);
-      throw new HttpException(
-        'Unexpected error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 }
