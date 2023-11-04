@@ -28,26 +28,26 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameService.server = server;
   }
 
-  handleConnection(client: Socket, ...args: any[]) {
+  handleConnection(client: ExtendedSocket, ...args: any[]) {
     console.log('a user connected');
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: ExtendedSocket) {
     console.log('user disconnected');
   }
 
   @SubscribeMessage('join')
-  handleJoin(client: Socket) {
+  handleJoin(client: ExtendedSocket) {
     this.gameService.joinGame(client);
   }
 
   @SubscribeMessage('move')
-  handleMove(client: Socket, payload: any) {
+  handleMove(client: ExtendedSocket, payload: any) {
     this.gameService.movePlayer(client, payload);
   }
 
   @SubscribeMessage('leave')
-  handleLeave(client: Socket, roomID: string) {
+  handleLeave(client: ExtendedSocket, roomID: string) {
     client.leave(roomID);
   }
 }

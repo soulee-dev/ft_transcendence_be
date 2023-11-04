@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Server, Socket } from 'socket.io';
+import { ExtendedSocket } from '../auth/jwtWsGuard.interface';
 
 interface Player {
   socketID: string;
@@ -104,16 +105,16 @@ export class GamesService {
     }
   }
 
-  joinGame(client: Socket) {
+  joinGame(client: ExtendedSocket) {
     let room: Room | undefined = this.rooms.find((r) => r.players.length === 1);
 
     if (room) {
       client.join(room.id.toString());
-      client.emit('playerNo', 2);
+      client.emit('playerNo', client.user.sub);
 
       room.players.push({
         socketID: client.id,
-        playerNo: 2,
+        playerNo: client.user.sub,
         score: 0,
         x: 690,
         y: 200,
@@ -131,7 +132,7 @@ export class GamesService {
         players: [
           {
             socketID: client.id,
-            playerNo: 1,
+            playerNo: client.user.sub,
             score: 0,
             x: 90,
             y: 200,
@@ -147,7 +148,7 @@ export class GamesService {
       };
       this.rooms.push(room);
       client.join(room.id.toString());
-      client.emit('playerNo', 1);
+      client.emit('playerNo', client.user.sub);
     }
   }
 
@@ -171,8 +172,9 @@ export class GamesService {
       }
     }
   }
-  startGame(room: Room) {
-    let interval = setInterval(() => {
+  async startGame(room: Room) {
+    let gameEnded = false;
+    let interval = setInterval(async () => {
       // Ball movement logic
       room.ball.x += room.ball.dx * 5;
       room.ball.y += room.ball.dy * 5;
@@ -216,10 +218,18 @@ export class GamesService {
       this.server.to(room.id.toString()).emit('updateGame', room);
 
       // Check for win condition
-      if (player1.score >= 10 || player2.score >= 10) {
-        room.winner = player1.score >= 10 ? 1 : 2;
+      if (!gameEnded && (player1.score >= 10 || player2.score >= 10)) {
+        gameEnded = true;
+        room.winner = player1.score >= 10 ? player1.playerNo : player2.playerNo;
         this.server.to(room.id.toString()).emit('endGame', room);
-        await this.prisma.games.create({});
+        await this.prisma.games.create({
+          data: {
+            player1_id: room.players[0].playerNo,
+            player2_id: room.players[1].playerNo,
+            score1: room.players[0].score,
+            score2: room.players[1].score,
+          },
+        });
         clearInterval(interval);
         this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
       }
