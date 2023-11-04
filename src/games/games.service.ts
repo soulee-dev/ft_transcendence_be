@@ -48,61 +48,43 @@ export class GamesService {
     }
   }
 
-  async createGame(id: number) {
-    try {
-      return await this.prisma.games.create({
-        data: {
-          player1_id: id,
-        },
-      });
-      // socket 처리
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException(`게임 생성 실패`);
-    }
-  }
+  async getLadder() {
+    // Count wins for player1
+    const games = await this.prisma.games.findMany({
+      where: {
+        AND: [{ score1: { not: null } }, { score2: { not: null } }],
+      },
+    });
 
-  async matchGame(id: number) {
-    try {
-      const unmatchedGames = await this.prisma.games.findMany({
-        where: {
-          player2_id: null,
-        },
-      });
-      if (unmatchedGames.length === 0) {
-        return { game: await this.createGame(id), matched: false };
+    let userWins: Record<number, number> = {};
+
+    // Determine the winner for each game
+    games.forEach((game) => {
+      let winnerId = null;
+      if (game.score1 > game.score2) {
+        winnerId = game.player1_id;
+      } else if (game.score2 > game.score1) {
+        winnerId = game.player2_id;
       }
-      const randomIndex = Math.floor(Math.random() * unmatchedGames.length);
-      const randomGame = unmatchedGames[randomIndex];
-      const randomGameId = randomGame.id;
-      return {
-        game: await this.prisma.games.update({
-          where: { id: randomGameId },
-          data: {
-            player2_id: id,
-          },
-        }),
-        matched: true,
-      };
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException(`게임 매칭 실패`);
-    }
-  }
+      if (winnerId !== null) {
+        if (!userWins[winnerId]) {
+          userWins[winnerId] = 1;
+        } else {
+          userWins[winnerId]++;
+        }
+      }
+    });
 
-  async cancelMatch(id: number) {
-    try {
-      const canceledGame = await this.prisma.games.delete({
-        where: {
-          id: id,
-          player2_id: null,
-        },
-      });
-      return canceledGame;
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException(`게임 취소 실패`);
-    }
+    // Convert the wins to an array, sort it, and take the top 10 users
+    const rankedUsers = Object.entries(userWins)
+      .map(([userId, winCount]) => ({
+        userId: Number(userId),
+        winCount,
+      }))
+      .sort((a, b) => b.winCount - a.winCount)
+      .slice(0, 10); // Take only the top 10
+
+    return rankedUsers;
   }
 
   joinGame(client: ExtendedSocket) {
