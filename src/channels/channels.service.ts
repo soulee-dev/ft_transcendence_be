@@ -667,7 +667,7 @@ export class ChannelsService {
       if (channel.password !== password)
         throw new HttpException(
           '올바르지 않은 비밀번호',
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.UNAUTHORIZED,
         );
 
       const joinedUser = await this.prisma.channelUsers.create({
@@ -736,7 +736,7 @@ export class ChannelsService {
       if (channel.password !== password) {
         throw new HttpException(
           '올바르지 않은 비밀번호',
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.UNAUTHORIZED,
         );
       }
 
@@ -772,10 +772,7 @@ export class ChannelsService {
       return joinedUser;
     } catch (error) {
       console.error(error);
-      throw new HttpException(
-        'Unexpected error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw error;
     }
   }
 }
