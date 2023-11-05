@@ -56,17 +56,17 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('acceptInvite')
-  handleAcceptInvite(client: ExtendedSocket, roomId: number) {
+  handleAcceptInvite(client: ExtendedSocket, roomId: string) {
     this.gameService.joinCustomGame(client, roomId);
   }
 
   @SubscribeMessage('declineInvite')
-  handleDeclineInvite(client: ExtendedSocket, roomId: number) {
+  handleDeclineInvite(client: ExtendedSocket, roomId: string) {
     this.gameService.declineInvite(client, roomId);
   }
 
   @SubscribeMessage('cancelMatch')
-  handleCancelMatch(client: ExtendedSocket, roomId: number) {
+  handleCancelMatch(client: ExtendedSocket, roomId: string) {
     this.gameService.cancelMatch(client, roomId);
   }
 

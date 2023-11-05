@@ -138,9 +138,9 @@ export class GamesService {
     this.notification.sendNotificationToUser(userId, payload);
   }
 
-  joinCustomGame(client: ExtendedSocket, roomID: number) {
+  joinCustomGame(client: ExtendedSocket, roomID: string) {
     try {
-      const room = this.rooms.find((room) => room.id === roomID);
+      const room = this.rooms.find((room) => room.id === parseInt(roomID));
       if (!room) {
         throw new BadRequestException(`존재하지 않는 게임입니다.`);
       }
@@ -177,8 +177,8 @@ export class GamesService {
     }, 3000);
   }
 
-  declineInvite(client: ExtendedSocket, roomID: number) {
-    const room = this.rooms.find((room) => room.id === roomID);
+  declineInvite(client: ExtendedSocket, roomID: string) {
+    const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
       const payload: NotificationPayload = {
         type: 'DECLINED_YOUR_INVITE',
@@ -194,8 +194,8 @@ export class GamesService {
     }
   }
 
-  cancelMatch(client: ExtendedSocket, roomID: number) {
-    const room = this.rooms.find((room) => room.id === roomID);
+  cancelMatch(client: ExtendedSocket, roomID: string) {
+    const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
       this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
     }
