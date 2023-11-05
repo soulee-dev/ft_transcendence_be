@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Server, Socket } from 'socket.io';
 import { ExtendedSocket } from '../auth/jwtWsGuard.interface';
+import { NotificationGateway } from '../notification/notification.gateway';
 
 interface Player {
   socketID: string;
@@ -23,11 +24,15 @@ interface Room {
   players: Player[];
   ball: Ball;
   winner: number;
+  custom: boolean;
 }
 
 @Injectable()
 export class GamesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notification: NotificationGateway,
+  ) {}
 
   private rooms: Room[] = [];
   public server: Server;
@@ -76,15 +81,45 @@ export class GamesService {
     });
 
     // Convert the wins to an array, sort it, and take the top 10 users
-    const rankedUsers = Object.entries(userWins)
+    let rankedUsers = Object.entries(userWins)
       .map(([userId, winCount]) => ({
         userId: Number(userId),
         winCount,
       }))
       .sort((a, b) => b.winCount - a.winCount)
+      .map((user, index) => ({
+        ...user,
+        rank: index + 1, // Assign the rank based on the index
+      }))
       .slice(0, 10); // Take only the top 10
 
     return rankedUsers;
+  }
+
+  customGame(client: ExtendedSocket, payload: any) {
+    const room = {
+      id: this.rooms.length + 1,
+      players: [
+        {
+          socketID: client.id,
+          playerNo: client.user.sub,
+          score: 0,
+          x: 90,
+          y: 200,
+        },
+      ],
+      ball: {
+        x: 395,
+        y: 245,
+        dx: Math.random() < 0.5 ? 1 : -1,
+        dy: 0,
+      },
+      winner: 0,
+      custom: true,
+    };
+    this.rooms.push(room);
+    client.join(room.id.toString());
+    client.emit('playerNo', client.user.sub);
   }
 
   joinGame(client: ExtendedSocket) {
@@ -127,6 +162,7 @@ export class GamesService {
           dy: 0,
         },
         winner: 0,
+        custom: false,
       };
       this.rooms.push(room);
       client.join(room.id.toString());

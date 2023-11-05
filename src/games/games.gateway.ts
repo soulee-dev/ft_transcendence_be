@@ -41,6 +41,11 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameService.joinGame(client);
   }
 
+  @SubscribeMessage('custom')
+  handleCustom(client: ExtendedSocket, @MessageBody() userId: number) {
+    this.gameService.customGame(client, userId);
+  }
+
   @SubscribeMessage('move')
   handleMove(client: ExtendedSocket, payload: any) {
     this.gameService.movePlayer(client, payload);
