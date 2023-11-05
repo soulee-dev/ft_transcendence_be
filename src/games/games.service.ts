@@ -163,8 +163,8 @@ export class GamesService {
     }
   }
 
-  setCustomGame(client: ExtendedSocket, roomID: number, speed: number) {
-    const room = this.rooms.find((room) => room.id === roomID);
+  setCustomGame(client: ExtendedSocket, roomID: string, speed: number) {
+    const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
       room.ball.dx *= speed;
       room.ball.dy *= speed;
