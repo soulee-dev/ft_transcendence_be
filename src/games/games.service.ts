@@ -137,8 +137,50 @@ export class GamesService {
     this.notification.sendNotificationToUser(userId, payload);
   }
 
+  joinCustomGame(client: ExtendedSocket, roomID: number) {
+    const room = this.rooms.find((room) => room.id === roomID);
+    if (room) {
+      client.join(room.id.toString());
+      client.emit('playerNo', client.user.sub);
+
+      room.players.push({
+        socketID: client.id,
+        playerNo: client.user.sub,
+        score: 0,
+        x: 690,
+        y: 200,
+      });
+
+      this.server.to(room.id.toString()).emit('startingGame');
+
+      setTimeout(() => {
+        this.server.to(room.id.toString()).emit('startedGame', room);
+        this.startGame(room);
+      }, 3000);
+    }
+  }
+
+  declineInvite(client: ExtendedSocket, roomID: number) {
+    const room = this.rooms.find((room) => room.id === roomID);
+    if (room) {
+      const payload: NotificationPayload = {
+        type: 'DECLINED_YOUR_INVITE',
+        channelId: room.id,
+        userId: client.user.sub,
+        message: `커스텀 게임 초대를 거절했습니다.`,
+      };
+      this.notification.sendNotificationToUser(
+        room.players[0].playerNo,
+        payload,
+      );
+      this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
+    }
+  }
+
   joinGame(client: ExtendedSocket) {
-    let room: Room | undefined = this.rooms.find((r) => r.players.length === 1);
+    let room: Room | undefined = this.rooms.find(
+      (r) => r.players.length === 1 && !r.custom,
+    );
 
     if (room) {
       client.join(room.id.toString());
