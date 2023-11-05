@@ -16,7 +16,8 @@ export interface NotificationPayload {
     | 'USER_JOIN_CHANNEL'
     | 'CHANNEL_UPDATED'
     | 'SENT_MESSAGE'
-    | 'PUBLIC_CHANNEL_CREATED';
+    | 'PUBLIC_CHANNEL_CREATED'
+    | 'INVITE_CUSTOM_GAME';
   channelId: number;
   userId: number;
   message: string;

@@ -6,6 +6,7 @@ import {
   SubscribeMessage,
   OnGatewayConnection,
   ConnectedSocket,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { NotificationPayload } from './notification-payload.interface';
@@ -20,7 +21,9 @@ import { ExtendedSocket } from '../auth/jwtWsGuard.interface';
   },
 })
 @UseGuards(JwtWsGuard)
-export class NotificationGateway implements OnGatewayConnection {
+export class NotificationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -46,6 +49,10 @@ export class NotificationGateway implements OnGatewayConnection {
 
   handleConnection(client: Socket) {
     console.log(`Client connected for notifications: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected from notifications: ${client.id}`);
   }
 
   sendNotificationToUser(userId: number, payload: NotificationPayload) {
