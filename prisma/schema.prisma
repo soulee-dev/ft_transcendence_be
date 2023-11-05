@@ -136,9 +136,9 @@ model Chat {
 model Games {
   id          Int      @id @default(autoincrement())
   player1_id  Int
-  player2_id  Int?
-  score1      Int?
-  score2      Int?
+  player2_id  Int
+  score1      Int
+  score2      Int
   player1     Users    @relation(fields: [player1_id], references: [id], name: "Games_player1_id_ToUsers")
-  player2     Users?    @relation(fields: [player2_id], references: [id], name: "Games_player2_id_ToUsers")
+  player2     Users    @relation(fields: [player2_id], references: [id], name: "Games_player2_id_ToUsers")
 }

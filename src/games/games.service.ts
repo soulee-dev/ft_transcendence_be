@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Server, Socket } from 'socket.io';
 import { ExtendedSocket } from '../auth/jwtWsGuard.interface';
 import { NotificationGateway } from '../notification/notification.gateway';
+import { NotificationPayload } from '../notification/notification-payload.interface';
 
 interface Player {
   socketID: string;
@@ -41,10 +42,7 @@ export class GamesService {
     try {
       return await this.prisma.games.findMany({
         where: {
-          OR: [
-            { player1_id: id, player2_id: { not: null } },
-            { player2_id: id, player1_id: { not: null } },
-          ],
+          OR: [{ player1_id: id }, { player2_id: id }],
         },
       });
     } catch (error) {
@@ -106,7 +104,7 @@ export class GamesService {
     }
   }
 
-  customGame(client: ExtendedSocket, payload: any) {
+  customGame(client: ExtendedSocket, userId: number) {
     const room = {
       id: this.rooms.length + 1,
       players: [
@@ -130,6 +128,13 @@ export class GamesService {
     this.rooms.push(room);
     client.join(room.id.toString());
     client.emit('playerNo', client.user.sub);
+    const payload: NotificationPayload = {
+      type: 'INVITE_CUSTOM_GAME',
+      channelId: room.id,
+      userId: client.user.sub,
+      message: `커스텀 게임 초대가 왔습니다.`,
+    };
+    this.notification.sendNotificationToUser(userId, payload);
   }
 
   joinGame(client: ExtendedSocket) {
