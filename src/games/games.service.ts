@@ -151,13 +151,22 @@ export class GamesService {
         y: 200,
       });
 
-      this.server.to(room.id.toString()).emit('startingGame');
-
-      setTimeout(() => {
-        this.server.to(room.id.toString()).emit('startedGame', room);
-        this.startGame(room);
-      }, 3000);
+      this.server.to(room.id.toString()).emit('invitedPlayerHasArrived');
     }
+  }
+
+  setCustomGame(client: ExtendedSocket, roomID: number, speed: number) {
+    const room = this.rooms.find((room) => room.id === roomID);
+    if (room) {
+      room.ball.dx *= speed;
+      room.ball.dy *= speed;
+    }
+    this.server.to(room.id.toString()).emit('startingGame');
+
+    setTimeout(() => {
+      this.server.to(room.id.toString()).emit('startedGame', room);
+      this.startGame(room, speed);
+    }, 3000);
   }
 
   declineInvite(client: ExtendedSocket, roomID: number) {
@@ -193,12 +202,13 @@ export class GamesService {
         x: 690,
         y: 200,
       });
+      const speed = 1;
 
       this.server.to(room.id.toString()).emit('startingGame');
 
       setTimeout(() => {
         this.server.to(room.id.toString()).emit('startedGame', room);
-        this.startGame(room);
+        this.startGame(room, speed);
       }, 3000);
     } else {
       room = {
@@ -247,7 +257,7 @@ export class GamesService {
       }
     }
   }
-  async startGame(room: Room) {
+  async startGame(room: Room, speed: number) {
     let gameEnded = false;
     let interval = setInterval(async () => {
       // Ball movement logic
@@ -264,8 +274,8 @@ export class GamesService {
         room.ball.y > player1.y &&
         room.ball.y < player1.y + 60
       ) {
-        room.ball.dx = 1;
-        this.adjustBallDirection(room.ball, player1.y);
+        room.ball.dx *= 1;
+        this.adjustBallDirection(room.ball, player1.y, speed);
       }
 
       // Player 2 collision
@@ -274,8 +284,8 @@ export class GamesService {
         room.ball.y > player2.y &&
         room.ball.y < player2.y + 60
       ) {
-        room.ball.dx = -1;
-        this.adjustBallDirection(room.ball, player2.y);
+        room.ball.dx *= -1;
+        this.adjustBallDirection(room.ball, player2.y, speed);
       }
 
       // Wall collision detection
@@ -311,11 +321,11 @@ export class GamesService {
     }, 1000 / 60); // 60 times per second
   }
 
-  private adjustBallDirection(ball: Ball, playerY: number) {
+  private adjustBallDirection(ball: Ball, playerY: number, speed: number) {
     if (ball.y < playerY + 30) {
-      ball.dy = -1;
+      ball.dy = -1 * speed;
     } else if (ball.y > playerY + 30) {
-      ball.dy = 1;
+      ball.dy = speed;
     } else {
       ball.dy = 0;
     }
@@ -332,7 +342,9 @@ export class GamesService {
   private resetBall(room: Room) {
     room.ball.x = 395;
     room.ball.y = 245;
-    room.ball.dx = room.players[0].score >= 10 ? -1 : 1;
+    room.ball.dx *= !((room.players[0].score + room.players[1].score) % 2)
+      ? -1
+      : 1;
     room.ball.dy = 0;
   }
 }
