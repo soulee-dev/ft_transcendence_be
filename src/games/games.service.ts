@@ -96,6 +96,16 @@ export class GamesService {
     return rankedUsers;
   }
 
+  async getLadderByUserId(id: number) {
+    const ranking = await this.getLadder();
+    const userRank = ranking.find((user) => user.userId === id);
+    if (userRank) {
+      return userRank;
+    } else {
+      return { userId: id, winCount: 0, rank: 0 };
+    }
+  }
+
   customGame(client: ExtendedSocket, payload: any) {
     const room = {
       id: this.rooms.length + 1,

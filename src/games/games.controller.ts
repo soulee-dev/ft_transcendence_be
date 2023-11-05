@@ -30,4 +30,11 @@ export class GamesController {
   async getLadder() {
     return this.gamesService.getLadder();
   }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/ladder/:userId')
+  @ApiBearerAuth()
+  async getLadderByUserId(@Param('userId') id: number) {
+    return this.gamesService.getLadderByUserId(id);
+  }
 }
