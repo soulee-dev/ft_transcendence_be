@@ -290,7 +290,7 @@ export class GamesService {
         room.ball.y > player1.y &&
         room.ball.y < player1.y + 60
       ) {
-        room.ball.dx *= 1;
+        room.ball.dx *= -1;
         this.adjustBallDirection(room.ball, player1.y, speed);
       }
 
