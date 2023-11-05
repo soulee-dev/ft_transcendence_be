@@ -52,46 +52,46 @@ export class GamesService {
   }
 
   async getLadder() {
-    // Count wins for player1
-    const games = await this.prisma.games.findMany({
-      where: {
-        AND: [{ score1: { not: null } }, { score2: { not: null } }],
-      },
-    });
+    try {
+      const games = await this.prisma.games.findMany();
 
-    let userWins: Record<number, number> = {};
+      let userWins: Record<number, number> = {};
 
-    // Determine the winner for each game
-    games.forEach((game) => {
-      let winnerId = null;
-      if (game.score1 > game.score2) {
-        winnerId = game.player1_id;
-      } else if (game.score2 > game.score1) {
-        winnerId = game.player2_id;
-      }
-      if (winnerId !== null) {
-        if (!userWins[winnerId]) {
-          userWins[winnerId] = 1;
-        } else {
-          userWins[winnerId]++;
+      // Determine the winner for each game
+      games.forEach((game) => {
+        let winnerId = null;
+        if (game.score1 > game.score2) {
+          winnerId = game.player1_id;
+        } else if (game.score2 > game.score1) {
+          winnerId = game.player2_id;
         }
-      }
-    });
+        if (winnerId !== null) {
+          if (!userWins[winnerId]) {
+            userWins[winnerId] = 1;
+          } else {
+            userWins[winnerId]++;
+          }
+        }
+      });
 
-    // Convert the wins to an array, sort it, and take the top 10 users
-    let rankedUsers = Object.entries(userWins)
-      .map(([userId, winCount]) => ({
-        userId: Number(userId),
-        winCount,
-      }))
-      .sort((a, b) => b.winCount - a.winCount)
-      .map((user, index) => ({
-        ...user,
-        rank: index + 1, // Assign the rank based on the index
-      }))
-      .slice(0, 10); // Take only the top 10
+      // Convert the wins to an array, sort it, and take the top 10 users
+      let rankedUsers = Object.entries(userWins)
+        .map(([userId, winCount]) => ({
+          userId: Number(userId),
+          winCount,
+        }))
+        .sort((a, b) => b.winCount - a.winCount)
+        .map((user, index) => ({
+          ...user,
+          rank: index + 1, // Assign the rank based on the index
+        }))
+        .slice(0, 10); // Take only the top 10
 
-    return rankedUsers;
+      return rankedUsers;
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException(`게임 랭킹 불러오기 실패`);
+    }
   }
 
   async getLadderByUserId(id: number) {
