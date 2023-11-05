@@ -163,17 +163,17 @@ export class GamesService {
     }
   }
 
-  setCustomGame(client: ExtendedSocket, roomID: string, speed: number) {
+  setCustomGame(client: ExtendedSocket, roomID: string, speed: string) {
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
-      room.ball.dx *= speed;
-      room.ball.dy *= speed;
+      room.ball.dx *= parseInt(speed);
+      room.ball.dy *= parseInt(speed);
     }
     this.server.to(room.id.toString()).emit('startingGame');
 
     setTimeout(() => {
       this.server.to(room.id.toString()).emit('startedGame', room);
-      this.startGame(room, speed);
+      this.startGame(room, parseInt(speed));
     }, 3000);
   }
 
