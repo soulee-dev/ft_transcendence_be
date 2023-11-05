@@ -47,8 +47,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('setCustom')
-  handleSetCustom(client: ExtendedSocket, ...args: any[]) {
-    const [roomId, speed] = args;
+  handleSetCustom(client: ExtendedSocket, [roomId, speed]: [string, string]) {
     this.gameService.setCustomGame(client, roomId, speed);
   }
 

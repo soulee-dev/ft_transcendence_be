@@ -164,6 +164,7 @@ export class GamesService {
   }
 
   setCustomGame(client: ExtendedSocket, roomID: string, speed: string) {
+    console.log(roomID, speed);
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
       room.ball.dx *= parseInt(speed);
@@ -358,9 +359,8 @@ export class GamesService {
   private resetBall(room: Room) {
     room.ball.x = 395;
     room.ball.y = 245;
-    room.ball.dx *= !((room.players[0].score + room.players[1].score) % 2)
-      ? -1
-      : 1;
+    room.ball.dx *=
+      (room.players[0].score + room.players[1].score) % 2 ? -1 : 1;
     room.ball.dy = 0;
   }
 }
