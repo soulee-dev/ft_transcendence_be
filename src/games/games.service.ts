@@ -287,6 +287,7 @@ export class GamesService {
 
       // Player 1 collision
       if (
+        room.ball.x > 100 &&
         room.ball.x < 110 &&
         room.ball.y > player1.y &&
         room.ball.y < player1.y + 60
@@ -297,7 +298,8 @@ export class GamesService {
 
       // Player 2 collision
       if (
-        room.ball.x > 670 &&
+        room.ball.x > 680 &&
+        room.ball.x < 690 &&
         room.ball.y > player2.y &&
         room.ball.y < player2.y + 60
       ) {
