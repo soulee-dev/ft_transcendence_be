@@ -42,7 +42,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('custom')
-  handleCustom(client: ExtendedSocket, @MessageBody() userId: number) {
+  handleCustom(client: ExtendedSocket, userId: number) {
     this.gameService.customGame(client, userId);
   }
 
@@ -56,17 +56,17 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('acceptInvite')
-  handleAcceptInvite(client: ExtendedSocket, @MessageBody() roomId: number) {
+  handleAcceptInvite(client: ExtendedSocket, roomId: number) {
     this.gameService.joinCustomGame(client, roomId);
   }
 
   @SubscribeMessage('declineInvite')
-  handleDeclineInvite(client: ExtendedSocket, @MessageBody() roomId: number) {
+  handleDeclineInvite(client: ExtendedSocket, roomId: number) {
     this.gameService.declineInvite(client, roomId);
   }
 
   @SubscribeMessage('cancelMatch')
-  handleCancelMatch(client: ExtendedSocket, @MessageBody() roomId: number) {
+  handleCancelMatch(client: ExtendedSocket, roomId: number) {
     this.gameService.cancelMatch(client, roomId);
   }
 
