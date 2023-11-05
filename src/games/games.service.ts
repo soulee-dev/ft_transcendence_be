@@ -128,6 +128,7 @@ export class GamesService {
     this.rooms.push(room);
     client.join(room.id.toString());
     client.emit('playerNo', client.user.sub);
+    client.emit('roomId', room.id);
     const payload: NotificationPayload = {
       type: 'INVITE_CUSTOM_GAME',
       channelId: room.id,
@@ -138,20 +139,27 @@ export class GamesService {
   }
 
   joinCustomGame(client: ExtendedSocket, roomID: number) {
-    const room = this.rooms.find((room) => room.id === roomID);
-    if (room) {
-      client.join(room.id.toString());
-      client.emit('playerNo', client.user.sub);
+    try {
+      const room = this.rooms.find((room) => room.id === roomID);
+      if (!room) {
+        throw new BadRequestException(`존재하지 않는 게임입니다.`);
+      }
+      if (room) {
+        client.join(room.id.toString());
+        client.emit('playerNo', client.user.sub);
 
-      room.players.push({
-        socketID: client.id,
-        playerNo: client.user.sub,
-        score: 0,
-        x: 690,
-        y: 200,
-      });
+        room.players.push({
+          socketID: client.id,
+          playerNo: client.user.sub,
+          score: 0,
+          x: 690,
+          y: 200,
+        });
 
-      this.server.to(room.id.toString()).emit('invitedPlayerHasArrived');
+        this.server.to(room.id.toString()).emit('invitedPlayerHasArrived');
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -182,6 +190,13 @@ export class GamesService {
         room.players[0].playerNo,
         payload,
       );
+      this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
+    }
+  }
+
+  cancelMatch(client: ExtendedSocket, roomID: number) {
+    const room = this.rooms.find((room) => room.id === roomID);
+    if (room) {
       this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
     }
   }
@@ -234,6 +249,7 @@ export class GamesService {
       this.rooms.push(room);
       client.join(room.id.toString());
       client.emit('playerNo', client.user.sub);
+      client.emit('roomId', room.id);
     }
   }
 

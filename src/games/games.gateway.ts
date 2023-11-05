@@ -65,6 +65,11 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameService.declineInvite(client, roomId);
   }
 
+  @SubscribeMessage('cancelMatch')
+  handleCancelMatch(client: ExtendedSocket, @MessageBody() roomId: number) {
+    this.gameService.cancelMatch(client, roomId);
+  }
+
   @SubscribeMessage('move')
   handleMove(client: ExtendedSocket, payload: any) {
     this.gameService.movePlayer(client, payload);
