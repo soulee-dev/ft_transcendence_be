@@ -103,6 +103,7 @@ model ChannelUsers {
   channel_id Int
   user_id    Int
   admin      Boolean
+  owner      Boolean
   channel    Channels @relation(fields: [channel_id], references: [id])
   user       Users    @relation(fields: [user_id], references: [id])
 

@@ -201,11 +201,13 @@ export class ChannelsService {
             channel_id: channel.id,
             user_id: id,
             admin: false,
+            owner: false,
           },
           {
             channel_id: channel.id,
             user_id: creatorId,
             admin: false,
+            owner: false,
           },
         ],
       });
@@ -283,6 +285,7 @@ export class ChannelsService {
           channel_id: channel.id,
           user_id: id,
           admin: true,
+          owner: true,
         },
       });
 
@@ -304,6 +307,7 @@ export class ChannelsService {
               channel_id: channel.id,
               user_id: user.id,
               admin: false,
+              owner: false,
             })),
           ],
         });
@@ -452,8 +456,8 @@ export class ChannelsService {
           },
         },
       });
-      if (user.admin === false)
-        throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN); //error: you are not admin
+      if (user.owner === false)
+        throw new HttpException('방장이 아님', HttpStatus.FORBIDDEN); //error: you are not admin
 
       const channelOption = await this.prisma.channelOptions.findUnique({
         where: {
@@ -545,6 +549,8 @@ export class ChannelsService {
         },
       });
       if (action === UserAction.GiveAdmin) {
+        if (admin.owner === false)
+          throw new HttpException('방장이 아님', HttpStatus.FORBIDDEN);
         const userState = await this.prisma.channelUsers.update({
           where: {
             user_id_channel_id: {
@@ -571,6 +577,8 @@ export class ChannelsService {
         return userState;
       }
       if (action === UserAction.Kick) {
+        if (admin.owner === false && user.admin === true)
+          throw new HttpException('관리자 강퇴 불가', HttpStatus.FORBIDDEN);
         const userState = await this.handleUserDeparture(channelId, id);
         const payload: NotificationPayload = {
           type: 'KICKED',
@@ -587,6 +595,8 @@ export class ChannelsService {
         return userState;
       }
       if (action === UserAction.Ban) {
+        if (admin.owner === false && user.admin === true)
+          throw new HttpException('관리자 차단 불가', HttpStatus.FORBIDDEN);
         await this.handleUserDeparture(channelId, id);
         const userState = await this.prisma.channelBans.create({
           data: {
@@ -609,6 +619,8 @@ export class ChannelsService {
         return userState;
       }
       if (action === UserAction.Mute) {
+        if (admin.owner === false && user.admin === true)
+          throw new HttpException('관리자 뮤트 불가', HttpStatus.FORBIDDEN);
         const until = addMinutes(new Date(), 3);
 
         // Store the mute in the database with the expiration time
@@ -634,6 +646,11 @@ export class ChannelsService {
         return userState;
       }
       if (action === UserAction.UnBan) {
+        if (admin.owner === false && user.admin === true)
+          throw new HttpException(
+            '관리자 차단 해제 불가',
+            HttpStatus.FORBIDDEN,
+          );
         const userState = await this.prisma.channelBans.delete({
           where: {
             channel_id_user_id: {
@@ -690,6 +707,7 @@ export class ChannelsService {
           channel_id: channelId,
           user_id: id,
           admin: false,
+          owner: false,
         },
       });
 
@@ -760,6 +778,7 @@ export class ChannelsService {
           channel_id: channel.id,
           user_id: id,
           admin: false,
+          owner: false,
         },
       });
       const users = await this.prisma.channelUsers.findMany({
