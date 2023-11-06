@@ -164,18 +164,17 @@ export class GamesService {
   }
 
   setCustomGame(client: ExtendedSocket, roomID: string, speed: string) {
-    console.log(roomID, speed);
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
       room.ball.dx *= parseInt(speed);
       room.ball.dy *= parseInt(speed);
-    }
-    this.server.to(room.id.toString()).emit('startingGame');
+      this.server.to(room.id.toString()).emit('startingGame');
 
-    setTimeout(() => {
-      this.server.to(room.id.toString()).emit('startedGame', room);
-      this.startGame(room, parseInt(speed));
-    }, 3000);
+      setTimeout(() => {
+        this.server.to(room.id.toString()).emit('startedGame', room);
+        this.startGame(room, parseInt(speed));
+      }, 3000);
+    }
   }
 
   declineInvite(client: ExtendedSocket, roomID: string) {
