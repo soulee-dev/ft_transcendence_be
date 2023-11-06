@@ -195,9 +195,40 @@ export class GamesService {
     }
   }
 
-  cancelMatch(client: ExtendedSocket, roomID: string) {
+  async cancelMatch(client: ExtendedSocket, roomID: string) {
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
+      if (room.players.length === 2) {
+        const winner =
+          room.players[0].playerNo === client.user.sub
+            ? room.players[1]
+            : room.players[0];
+        const loser =
+          room.players[0].playerNo !== client.user.sub
+            ? room.players[1]
+            : room.players[0];
+        const payload: NotificationPayload = {
+          type: 'LEFT_GAME',
+          channelId: room.id,
+          userId: client.user.sub,
+          message: `상대방이 나갔습니다.`,
+        };
+        this.notification.sendNotificationToUser(winner.playerNo, payload);
+        room.winner = winner.playerNo;
+        winner.score = 10;
+        loser.score = 0;
+        this.server.to(room.id.toString()).emit('endGame', room);
+        if (!room.custom) {
+          await this.prisma.games.create({
+            data: {
+              player1_id: winner.playerNo,
+              player2_id: loser.playerNo,
+              score1: winner.score,
+              score2: loser.score,
+            },
+          });
+        }
+      }
       this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
     }
   }
