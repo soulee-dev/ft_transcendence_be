@@ -54,7 +54,9 @@ export class AuthController {
         const jwt = await this.authService.login(req.user, req.user.id);
         return res
           .cookie('access_token', jwt)
-          .redirect(`http://${process.env.HOST}:${process.env.FE_PORT}/`);
+          .redirect(
+            `http://${process.env.HOST}:${process.env.FE_PORT}/?newUser=true`,
+          );
       }
       return error;
     }
