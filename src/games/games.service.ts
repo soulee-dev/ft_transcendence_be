@@ -318,8 +318,8 @@ export class GamesService {
     });
     let interval = setInterval(async () => {
       // Ball movement logic
-      room.ball.x += room.ball.dx * 5;
-      room.ball.y += room.ball.dy * 5;
+      room.ball.x += room.ball.dx * 3;
+      room.ball.y += room.ball.dy * 3;
 
       // Collision detection with paddles
       const player1 = room.players[0];
