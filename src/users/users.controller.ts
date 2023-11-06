@@ -75,17 +75,6 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'), TwoFaGuard)
-  @Post('/create')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiBody({ type: CreateUserDto })
-  async createUser(@Body() userData: CreateUserDto) {
-    return this.usersService.createUser(userData);
-  }
-
-  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
   @Post('/me/update')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a user by ID' })

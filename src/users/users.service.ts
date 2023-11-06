@@ -46,17 +46,6 @@ export class UsersService {
     }
   }
 
-  async createUser(userData: CreateUserDto) {
-    try {
-      return await this.prisma.users.create({
-        data: userData,
-      });
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException('유저 생성 실패');
-    }
-  }
-
   async updateUser(id: number, userData: UpdateUserDto) {
     try {
       if (userData.name) {
