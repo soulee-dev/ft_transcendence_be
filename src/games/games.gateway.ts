@@ -75,4 +75,14 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleLeave(client: ExtendedSocket, roomID: string) {
     client.leave(roomID);
   }
+
+  @SubscribeMessage('joinAsSpectator')
+  handleJoinAsSpectator(client: ExtendedSocket, userId: string) {
+    this.gameService.joinAsSpectator(client, userId);
+  }
+
+  @SubscribeMessage('leaveAsSpectator')
+  handleLeaveAsSpectator(client: ExtendedSocket, roomID: string) {
+    this.gameService.leaveAsSpectator(client, roomID);
+  }
 }

@@ -26,6 +26,7 @@ interface Room {
   ball: Ball;
   winner: number;
   custom: boolean;
+  spectators?: number[];
 }
 
 @Injectable()
@@ -36,6 +37,7 @@ export class GamesService {
   ) {}
 
   private rooms: Room[] = [];
+  private nextRoomID: number = 1;
   public server: Server;
 
   async getRecord(id: number) {
@@ -104,9 +106,9 @@ export class GamesService {
     }
   }
 
-  customGame(client: ExtendedSocket, userId: number) {
+  createRoom(client: ExtendedSocket, custom: boolean) {
     const room = {
-      id: this.rooms.length + 1,
+      id: this.nextRoomID++,
       players: [
         {
           socketID: client.id,
@@ -123,12 +125,17 @@ export class GamesService {
         dy: 0,
       },
       winner: 0,
-      custom: true,
+      custom: custom,
     };
     this.rooms.push(room);
     client.join(room.id.toString());
     client.emit('playerNo', client.user.sub);
     client.emit('roomId', room.id);
+    return room;
+  }
+
+  customGame(client: ExtendedSocket, userId: number) {
+    const room = this.createRoom(client, true);
     const payload: NotificationPayload = {
       type: 'INVITE_CUSTOM_GAME',
       channelId: room.id,
@@ -180,16 +187,7 @@ export class GamesService {
   declineInvite(client: ExtendedSocket, roomID: string) {
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
-      const payload: NotificationPayload = {
-        type: 'DECLINED_YOUR_INVITE',
-        channelId: room.id,
-        userId: client.user.sub,
-        message: `커스텀 게임 초대를 거절했습니다.`,
-      };
-      this.notification.sendNotificationToUser(
-        room.players[0].playerNo,
-        payload,
-      );
+      this.server.to(room.id.toString()).emit('declinedInvite');
       this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
     }
   }
@@ -257,30 +255,7 @@ export class GamesService {
         this.startGame(room, speed);
       }, 3000);
     } else {
-      room = {
-        id: this.rooms.length + 1,
-        players: [
-          {
-            socketID: client.id,
-            playerNo: client.user.sub,
-            score: 0,
-            x: 90,
-            y: 200,
-          },
-        ],
-        ball: {
-          x: 395,
-          y: 245,
-          dx: Math.random() < 0.5 ? 1 : -1,
-          dy: 0,
-        },
-        winner: 0,
-        custom: false,
-      };
-      this.rooms.push(room);
-      client.join(room.id.toString());
-      client.emit('playerNo', client.user.sub);
-      client.emit('roomId', room.id);
+      room = this.createRoom(client, false);
     }
   }
 
@@ -416,5 +391,32 @@ export class GamesService {
     room.ball.dx *=
       (room.players[0].score + room.players[1].score) % 2 ? -1 : 1;
     room.ball.dy = 0;
+  }
+
+  joinAsSpectator(client: ExtendedSocket, userId: string) {
+    const room = this.rooms.find(
+      (room) =>
+        room.players[0].playerNo === parseInt(userId) ||
+        room.players[1].playerNo === parseInt(userId),
+    );
+    if (room) {
+      client.join(room.id.toString());
+      room.spectators.push(client.user.sub); // Add the client ID to the spectators array
+      this.server.to(room.id.toString()).emit('spectatorJoined', {
+        spectatorId: client.user.sub,
+        roomId: room.id,
+      });
+    }
+  }
+
+  leaveAsSpectator(client: ExtendedSocket, roomID: string) {
+    const room = this.rooms.find((room) => room.id === parseInt(roomID));
+    if (room) {
+      client.leave(room.id.toString());
+      room.spectators = room.spectators.filter((id) => id !== client.user.sub); // Remove the client ID from the spectators array
+      this.server
+        .to(room.id.toString())
+        .emit('spectatorLeft', { spectatorId: client.user.sub });
+    }
   }
 }
