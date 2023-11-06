@@ -326,14 +326,16 @@ export class GamesService {
         gameEnded = true;
         room.winner = player1.score >= 10 ? player1.playerNo : player2.playerNo;
         this.server.to(room.id.toString()).emit('endGame', room);
-        await this.prisma.games.create({
-          data: {
-            player1_id: room.players[0].playerNo,
-            player2_id: room.players[1].playerNo,
-            score1: room.players[0].score,
-            score2: room.players[1].score,
-          },
-        });
+        if (!room.custom) {
+          await this.prisma.games.create({
+            data: {
+              player1_id: room.players[0].playerNo,
+              player2_id: room.players[1].playerNo,
+              score1: room.players[0].score,
+              score2: room.players[1].score,
+            },
+          });
+        }
         clearInterval(interval);
         this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
       }
