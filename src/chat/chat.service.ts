@@ -27,9 +27,17 @@ export class ChatService {
         throw new HttpException('채팅방 유저 아님', HttpStatus.FORBIDDEN);
       }
 
-      return await this.prisma.chat.findMany({
+      let chats = await this.prisma.chat.findMany({
         where: { channel_id: channelId },
       });
+      let blockedUsers = await this.prisma.blockedUsers.findMany({
+        where: {
+          blocked_by: id,
+        },
+      });
+      let blockedUserIds = blockedUsers.map((user) => user.user_id);
+      chats = chats.filter((chat) => !blockedUserIds.includes(chat.sent_by_id));
+      return chats;
     } catch (error) {
       console.error(error);
       throw error;
@@ -94,13 +102,25 @@ export class ChatService {
         throw new HttpException('채팅방에서 뮤트 당함', HttpStatus.FORBIDDEN);
       }
 
+      const blocked_by = await this.prisma.blockedUsers.findMany({
+        where: {
+          user_id: senderId,
+        },
+      });
       const users = await this.prisma.channelUsers.findMany({
         where: {
           channel_id: channelId,
         },
       });
 
-      const filteredUsers = users.filter((user) => user.user_id !== senderId);
+      let filteredUsers = users.filter((user) => user.user_id !== senderId);
+      const blockedUserIds = blocked_by.map(
+        (blockedUser) => blockedUser.blocked_by,
+      );
+
+      filteredUsers = filteredUsers.filter(
+        (user) => !blockedUserIds.includes(user.user_id),
+      );
 
       const newMessage = await this.prisma.chat.create({
         data: {
