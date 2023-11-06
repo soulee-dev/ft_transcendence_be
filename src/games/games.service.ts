@@ -156,7 +156,7 @@ export class GamesService {
           y: 200,
         });
 
-        this.server.to(room.id.toString()).emit('invitedPlayerHasArrived');
+        client.to(room.id.toString()).emit('invitedPlayerHasArrived');
       }
     } catch (error) {
       throw error;
