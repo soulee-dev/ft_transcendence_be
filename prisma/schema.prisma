@@ -77,7 +77,7 @@ model BlockedUsers {
 
 model Channels {
   id             Int             @id @default(autoincrement())
-  password       String?         @db.VarChar(25)
+  password       String?         @db.VarChar(255)
   name           String          @db.VarChar(25)
   channelOptions ChannelOptions?
   channelUsers   ChannelUsers[]

@@ -8,6 +8,7 @@ import { UserAction } from './enum/user-action.enum';
 import { addMinutes } from 'date-fns';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { NotificationPayload } from '../notification/notification-payload.interface';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelsService {
@@ -15,6 +16,18 @@ export class ChannelsService {
     private readonly prisma: PrismaService,
     private readonly notificationGateway: NotificationGateway,
   ) {}
+
+  private async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return await bcrypt.hash(password, saltRounds);
+  }
+
+  async validatePassword(
+    inputPassword: string,
+    storedHash: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(inputPassword, storedHash);
+  }
 
   async getChannelsIn(user_id: number) {
     try {
@@ -212,7 +225,7 @@ export class ChannelsService {
   }
 
   async createChannel(channelData: CreateChannelDto, id: number) {
-    const { name, password, option, users } = channelData;
+    let { name, password, option, users } = channelData;
 
     try {
       let editedName = name;
@@ -249,7 +262,7 @@ export class ChannelsService {
       });
       if (existingChannel)
         throw new HttpException('이미 존재하는 이름', HttpStatus.CONFLICT);
-      // Transaction 1: Create the channel
+      if (password) password = await this.hashPassword(password);
       const channel = await this.prisma.channels.create({
         data: {
           name: editedName,
@@ -420,38 +433,40 @@ export class ChannelsService {
     id: number,
     updateData: UpdateChannelDto,
   ) {
-    if (updateData.name) {
-      let editedName = updateData.name;
-      updateData.name = editedName.trim().replace(/\s+/g, ' ');
-      if (updateData.name.startsWith('DM:'))
-        throw new HttpException(
-          '다음의 형식을 포함할 수 없음: DM:',
-          HttpStatus.BAD_REQUEST,
-        );
-    }
+    try {
+      if (updateData.name) {
+        let editedName = updateData.name;
+        updateData.name = editedName.trim().replace(/\s+/g, ' ');
+        if (updateData.name.startsWith('DM:'))
+          throw new HttpException(
+            '다음의 형식을 포함할 수 없음: DM:',
+            HttpStatus.BAD_REQUEST,
+          );
+      }
 
-    const user = await this.prisma.channelUsers.findUnique({
-      where: {
-        user_id_channel_id: {
-          user_id: id,
+      const user = await this.prisma.channelUsers.findUnique({
+        where: {
+          user_id_channel_id: {
+            user_id: id,
+            channel_id: channelId,
+          },
+        },
+      });
+      if (user.admin === false)
+        throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN); //error: you are not admin
+
+      const channelOption = await this.prisma.channelOptions.findUnique({
+        where: {
           channel_id: channelId,
         },
-      },
-    });
-    if (user.admin === false)
-      throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN); //error: you are not admin
-
-    const channelOption = await this.prisma.channelOptions.findUnique({
-      where: {
-        channel_id: channelId,
-      },
-    });
-    if (
-      channelOption.option === ChannelOptions.Dm ||
-      updateData.option === ChannelOptions.Dm
-    )
-      throw new HttpException('DM 옵션 변경 불가', HttpStatus.BAD_REQUEST); // cannot change DM option
-    try {
+      });
+      if (
+        channelOption.option === ChannelOptions.Dm ||
+        updateData.option === ChannelOptions.Dm
+      )
+        throw new HttpException('DM 옵션 변경 불가', HttpStatus.BAD_REQUEST); // cannot change DM option
+      if (updateData.password)
+        updateData.password = await this.hashPassword(updateData.password);
       const updatedChannel = await this.prisma.channels.update({
         where: { id: channelId },
         data: updateData,
@@ -664,7 +679,7 @@ export class ChannelsService {
           id: channelId,
         },
       });
-      if (channel.password !== password)
+      if ((await this.validatePassword(password, channel.password)) === false)
         throw new HttpException(
           '올바르지 않은 비밀번호',
           HttpStatus.UNAUTHORIZED,
@@ -733,7 +748,7 @@ export class ChannelsService {
         throw new HttpException('차단 당함', HttpStatus.FORBIDDEN);
       }
 
-      if (channel.password !== password) {
+      if ((await this.validatePassword(password, channel.password)) === false) {
         throw new HttpException(
           '올바르지 않은 비밀번호',
           HttpStatus.UNAUTHORIZED,
