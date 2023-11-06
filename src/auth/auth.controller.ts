@@ -55,7 +55,7 @@ export class AuthController {
         return res
           .cookie('access_token', jwt)
           .redirect(
-            `http://${process.env.HOST}:${process.env.FE_PORT}/?newUser=true`,
+            `http://${process.env.HOST}:${process.env.FE_PORT}/edit_profile/?newUser=true`,
           );
       }
       return error;
