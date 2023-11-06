@@ -307,6 +307,16 @@ export class GamesService {
   }
   async startGame(room: Room, speed: number) {
     let gameEnded = false;
+    await this.prisma.users.updateMany({
+      where: {
+        id: {
+          in: [room.players[0].playerNo, room.players[1].playerNo],
+        },
+      },
+      data: {
+        status: 'in_game',
+      },
+    });
     let interval = setInterval(async () => {
       // Ball movement logic
       room.ball.x += room.ball.dx * 5;
@@ -367,6 +377,16 @@ export class GamesService {
             },
           });
         }
+        await this.prisma.users.updateMany({
+          where: {
+            id: {
+              in: [room.players[0].playerNo, room.players[1].playerNo],
+            },
+          },
+          data: {
+            status: 'online',
+          },
+        });
         clearInterval(interval);
         this.rooms = this.rooms.filter((r) => r.id !== room.id); // Remove the room
       }
