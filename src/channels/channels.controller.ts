@@ -269,7 +269,6 @@ export class ChannelsController {
     description: 'Admin list retrieved successfully',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
   async getAdminChannelList(@Req() req) {
     const userId = req.user.id;
     return this.channelsService.getAdminChannelList(userId);
