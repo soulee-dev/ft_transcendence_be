@@ -273,4 +273,15 @@ export class ChannelsController {
     const userId = req.user.id;
     return this.channelsService.getAdminChannelList(userId);
   }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/:channel_id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Retrieve a channel by ID' })
+  @ApiResponse({ status: 200, description: 'Channel retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
+  async getChannel(@Param('channel_id') id: number) {
+    return this.channelsService.getChannel(id);
+  }
 }

@@ -948,4 +948,26 @@ export class ChannelsService {
       throw error;
     }
   }
+
+  async getChannel(channelId: number) {
+    try {
+      const channel = await this.prisma.channels.findUnique({
+        where: {
+          id: channelId,
+        },
+      });
+      if (!channel) {
+        throw new HttpException('해당 채널 없음', HttpStatus.BAD_REQUEST);
+      }
+      const channelOption = await this.prisma.channelOptions.findUnique({
+        where: {
+          channel_id: channelId,
+        },
+      });
+      return { ...channel, option: channelOption.option };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
