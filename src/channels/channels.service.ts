@@ -836,7 +836,7 @@ export class ChannelsService {
         },
       });
       if (
-        password &&
+        channel.password &&
         (await this.validatePassword(password, channel.password)) === false
       )
         throw new HttpException(
@@ -908,7 +908,10 @@ export class ChannelsService {
         throw new HttpException('차단 당함', HttpStatus.FORBIDDEN);
       }
 
-      if ((await this.validatePassword(password, channel.password)) === false) {
+      if (
+        channel.password &&
+        (await this.validatePassword(password, channel.password)) === false
+      ) {
         throw new HttpException(
           '올바르지 않은 비밀번호',
           HttpStatus.UNAUTHORIZED,
