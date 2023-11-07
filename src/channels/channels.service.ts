@@ -620,6 +620,8 @@ export class ChannelsService {
       });
       if (!admin || admin.admin === false)
         throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN);
+      if (admin.user_id === managementData.id)
+        throw new HttpException('자기 자신 적용 불가', HttpStatus.BAD_REQUEST);
 
       const { id, action } = managementData;
       const user = await this.prisma.channelUsers.findUnique({
