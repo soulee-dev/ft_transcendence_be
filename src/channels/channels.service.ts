@@ -835,7 +835,10 @@ export class ChannelsService {
           id: channelId,
         },
       });
-      if ((await this.validatePassword(password, channel.password)) === false)
+      if (
+        password &&
+        (await this.validatePassword(password, channel.password)) === false
+      )
         throw new HttpException(
           '올바르지 않은 비밀번호',
           HttpStatus.UNAUTHORIZED,
