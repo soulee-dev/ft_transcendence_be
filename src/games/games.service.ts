@@ -413,6 +413,7 @@ export class GamesService {
         spectatorId: client.user.sub,
         roomId: room.id,
       });
+      client.emit('roomId', room.id);
     }
   }
 
