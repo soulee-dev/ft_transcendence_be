@@ -576,13 +576,17 @@ export class ChannelsService {
           channel_id: channelId,
         },
       });
-      if (
-        channelOption.option === ChannelOptions.Dm ||
-        updateData.option === ChannelOptions.Dm
-      )
+      if (channelOption.option === ChannelOptions.Dm)
         throw new HttpException('DM 옵션 변경 불가', HttpStatus.BAD_REQUEST); // cannot change DM option
       if (updateData.password)
         updateData.password = await this.hashPassword(updateData.password);
+      const existingChannel = await this.prisma.channels.findUnique({
+        where: {
+          name: updateData.name,
+        },
+      });
+      if (existingChannel)
+        throw new HttpException('이미 존재하는 이름', HttpStatus.CONFLICT); //error: channel name already exists
       const updatedChannel = await this.prisma.channels.update({
         where: { id: channelId },
         data: updateData,
