@@ -143,6 +143,13 @@ export class ChannelsService {
 
   async getBanList(channel_id: number, id: number) {
     try {
+      const channel = await this.prisma.channels.findUnique({
+        where: {
+          id: channel_id,
+        },
+      });
+      if (!channel)
+        throw new HttpException('해당 채팅방 없음', HttpStatus.BAD_REQUEST);
       const channelOption = await this.prisma.channelOptions.findUnique({
         where: {
           channel_id: channel_id,
@@ -179,6 +186,13 @@ export class ChannelsService {
 
   async getMuteList(channel_id: number, id: number) {
     try {
+      const channel = await this.prisma.channels.findUnique({
+        where: {
+          id: channel_id,
+        },
+      });
+      if (!channel)
+        throw new HttpException('해당 채팅방 없음', HttpStatus.BAD_REQUEST);
       const channelOption = await this.prisma.channelOptions.findUnique({
         where: {
           channel_id: channel_id,
