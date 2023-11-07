@@ -970,7 +970,11 @@ export class ChannelsService {
           channel_id: channelId,
         },
       });
-      return { ...channel, option: channelOption.option };
+      if (channel.password) {
+        return { ...channel, password: true, option: channelOption.option };
+      } else {
+        return { ...channel, password: false, option: channelOption.option };
+      }
     } catch (error) {
       console.error(error);
       throw error;
