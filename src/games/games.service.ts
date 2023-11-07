@@ -231,31 +231,38 @@ export class GamesService {
   }
 
   joinGame(client: ExtendedSocket) {
-    let room: Room | undefined = this.rooms.find(
-      (r) => r.players.length === 1 && !r.custom,
-    );
+    try {
+      let room: Room | undefined = this.rooms.find(
+        (r) => r.players.length === 1 && !r.custom,
+      );
 
-    if (room) {
-      client.join(room.id.toString());
-      client.emit('playerNo', client.user.sub);
+      if (room) {
+        if (room.players[0].playerNo === client.user.sub) {
+          throw new BadRequestException(`자기 자신과는 게임을 할 수 없습니다.`);
+        }
+        client.join(room.id.toString());
+        client.emit('playerNo', client.user.sub);
 
-      room.players.push({
-        socketID: client.id,
-        playerNo: client.user.sub,
-        score: 0,
-        x: 690,
-        y: 200,
-      });
-      const speed = 1;
+        room.players.push({
+          socketID: client.id,
+          playerNo: client.user.sub,
+          score: 0,
+          x: 690,
+          y: 200,
+        });
+        const speed = 1;
 
-      this.server.to(room.id.toString()).emit('startingGame');
+        this.server.to(room.id.toString()).emit('startingGame');
 
-      setTimeout(() => {
-        this.server.to(room.id.toString()).emit('startedGame', room);
-        this.startGame(room, speed);
-      }, 3000);
-    } else {
-      room = this.createRoom(client, false);
+        setTimeout(() => {
+          this.server.to(room.id.toString()).emit('startedGame', room);
+          this.startGame(room, speed);
+        }, 3000);
+      } else {
+        room = this.createRoom(client, false);
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
