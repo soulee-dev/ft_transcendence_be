@@ -141,6 +141,104 @@ export class ChannelsService {
     }
   }
 
+  async getBanList(channel_id: number, id: number) {
+    try {
+      const channelOption = await this.prisma.channelOptions.findUnique({
+        where: {
+          channel_id: channel_id,
+        },
+      });
+      if (channelOption.option === ChannelOptions.Dm)
+        throw new HttpException('DM 차단 목록 없음', HttpStatus.BAD_REQUEST);
+      const admin = await this.prisma.channelUsers.findUnique({
+        where: {
+          user_id_channel_id: {
+            user_id: id,
+            channel_id: channel_id,
+          },
+        },
+      });
+      if (!admin || admin.admin === false)
+        throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN);
+      const channelBans = await this.prisma.channelBans.findMany({
+        where: { channel_id: channel_id },
+      });
+      const channelBanIds = channelBans.map((ban) => ban.user_id);
+      const users = await this.prisma.users.findMany({
+        where: {
+          id: {
+            in: channelBanIds,
+          },
+        },
+      });
+      return users;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getMuteList(channel_id: number, id: number) {
+    try {
+      const channelOption = await this.prisma.channelOptions.findUnique({
+        where: {
+          channel_id: channel_id,
+        },
+      });
+      if (channelOption.option === ChannelOptions.Dm)
+        throw new HttpException('DM 뮤트 목록 없음', HttpStatus.BAD_REQUEST);
+      const admin = await this.prisma.channelUsers.findUnique({
+        where: {
+          user_id_channel_id: {
+            user_id: id,
+            channel_id: channel_id,
+          },
+        },
+      });
+      if (!admin || admin.admin === false)
+        throw new HttpException('관리자가 아님', HttpStatus.FORBIDDEN);
+      const channelMutes = await this.prisma.channelMutes.findMany({
+        where: { channel_id: channel_id },
+      });
+      const channelMuteIds = channelMutes.map((mute) => mute.user_id);
+      const users = await this.prisma.users.findMany({
+        where: {
+          id: {
+            in: channelMuteIds,
+          },
+        },
+      });
+      return users;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAdminChannelList(id: number) {
+    try {
+      const adminChannels = await this.prisma.channelUsers.findMany({
+        where: {
+          user_id: id,
+          admin: true,
+        },
+      });
+      const channelIds = adminChannels.map((channel) => channel.channel_id);
+      const channels = await this.prisma.channels.findMany({
+        where: {
+          id: {
+            in: channelIds,
+          },
+        },
+      });
+      return channels;
+    } catch (error) {
+      console.error('Error getting channels:', error);
+      throw new HttpException(
+        '관리하는 채팅방 불러오기 실패',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async createDMChannel(id: number, creatorId: number) {
     try {
       const user = await this.prisma.users.findUnique({

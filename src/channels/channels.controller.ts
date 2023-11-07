@@ -235,4 +235,43 @@ export class ChannelsController {
     }
     return this.channelsService.joinPrivateChannel(id, password, name);
   }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/:channel_id/banList')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get ban list of a channel' })
+  @ApiResponse({ status: 200, description: 'Ban list retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
+  async getBanList(@Param('channel_id') id: number, @Req() req) {
+    const userId = req.user.id;
+    return this.channelsService.getBanList(id, userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/:channel_id/muteList')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get mute list of a channel' })
+  @ApiResponse({ status: 200, description: 'Mute list retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
+  async getMuteList(@Param('channel_id') id: number, @Req() req) {
+    const userId = req.user.id;
+    return this.channelsService.getMuteList(id, userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'), TwoFaGuard)
+  @Get('/adminChannelList')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get admin list of a channel' })
+  @ApiResponse({
+    status: 200,
+    description: 'Admin list retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiParam({ name: 'channel_id', description: 'ID of the channel' })
+  async getAdminChannelList(@Req() req) {
+    const userId = req.user.id;
+    return this.channelsService.getAdminChannelList(userId);
+  }
 }
