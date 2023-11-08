@@ -90,7 +90,18 @@ export class AuthService {
       where: { id: id },
     });
     // TODO: Add additional infos about user
+    let idx = 2;
     if (!dbUser) {
+      while (true) {
+        const existingName = await this.prisma.users.findUnique({
+          where: { name: user.name },
+        });
+        if (!existingName) {
+          break;
+        } else {
+          user.name = user.name + '2';
+        }
+      }
       dbUser = await this.prisma.users.create({
         data: {
           id: user.id,
