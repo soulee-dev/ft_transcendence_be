@@ -45,13 +45,9 @@ export class NotificationGateway
     return { status: 'Left the notification channel' };
   }
 
-  handleConnection(client: Socket) {
-    console.log(`Client connected for notifications: ${client.id}`);
-  }
+  handleConnection(client: Socket) {}
 
-  handleDisconnect(client: Socket) {
-    console.log(`Client disconnected from notifications: ${client.id}`);
-  }
+  handleDisconnect(client: Socket) {}
 
   sendNotificationToUser(userId: number, payload: NotificationPayload) {
     this.server.to(userId.toString()).emit('notification', payload);

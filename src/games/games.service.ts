@@ -408,7 +408,11 @@ export class GamesService {
     );
     if (room) {
       client.join(room.id.toString());
-      room.spectators.push(client.user.sub); // Add the client ID to the spectators array
+      if (room.spectators) {
+        room.spectators.push(client.user.sub); // Add the client ID to the spectators array
+      } else {
+        room.spectators = [client.user.sub];
+      }
       this.server.to(room.id.toString()).emit('spectatorJoined', {
         spectatorId: client.user.sub,
         roomId: room.id,
