@@ -192,30 +192,6 @@ export class GamesService {
     }
   }
 
-  findRoomByPlayerId(playerId: number) {
-    try {
-      const ret = this.rooms.find(
-        (room) =>
-          room.players[0].playerNo === playerId ||
-          room.players[1].playerNo === playerId,
-      );
-      return ret;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  findRoomBySpectatorId(spectatorId: number) {
-    try {
-      const ret = this.rooms.find(
-        (room) => room.spectators?.includes(spectatorId),
-      );
-      return ret;
-    } catch (error) {
-      return null;
-    }
-  }
-
   async cancelMatch(client: ExtendedSocket, roomID: string) {
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
