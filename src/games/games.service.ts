@@ -420,11 +420,11 @@ export class GamesService {
   leaveAsSpectator(client: ExtendedSocket, roomID: string) {
     const room = this.rooms.find((room) => room.id === parseInt(roomID));
     if (room) {
-      client.leave(room.id.toString());
       room.spectators = room.spectators.filter((id) => id !== client.user.sub); // Remove the client ID from the spectators array
       this.server
         .to(room.id.toString())
         .emit('spectatorLeft', { spectatorId: client.user.sub });
     }
+    client.leave(roomID.toString());
   }
 }
