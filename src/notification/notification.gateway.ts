@@ -34,7 +34,6 @@ export class NotificationGateway
     const userId = client.user.sub; // <-- Get userId from the socket directly
     client.join(userId.toString());
     this.activeUsers.add(userId);
-    console.log(`User ${userId} joined the notification channel`);
     return { status: 'Joined notification channel', userId };
   }
 
@@ -43,7 +42,6 @@ export class NotificationGateway
     const userId = client.user.sub;
     client.leave(userId.toString());
     this.activeUsers.delete(userId);
-    console.log(`User ${client.id} left the notification channel`);
     return { status: 'Left the notification channel' };
   }
 
@@ -57,20 +55,10 @@ export class NotificationGateway
 
   sendNotificationToUser(userId: number, payload: NotificationPayload) {
     this.server.to(userId.toString()).emit('notification', payload);
-    console.log(
-      `Notification sent to user ${userId}, payload: ${JSON.stringify(
-        payload,
-      )}`,
-    );
   }
   sendNotificationToAllActiveUsers(payload: NotificationPayload) {
     this.activeUsers.forEach((userId) => {
       this.sendNotificationToUser(userId, payload);
     });
-    console.log(
-      `Notification sent to all active users, payload: ${JSON.stringify(
-        payload,
-      )}`,
-    );
   }
 }

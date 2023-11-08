@@ -2,6 +2,7 @@ export interface NotificationPayload {
   type:
     | 'ADDED_TO_CHANNEL'
     | 'GIVEN_ADMIN'
+    | 'REMOVED_ADMIN'
     | 'BANNED'
     | 'UNBANNED'
     | 'KICKED'

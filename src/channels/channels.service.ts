@@ -407,10 +407,10 @@ export class ChannelsService {
         },
       });
       const blockedByUserIds = blocked.map((b) => b.blocked_by);
-      const filteredUsers = invitedUsers.filter(
+      let filteredUsers = invitedUsers.filter(
         (user) => !blockedByUserIds.includes(user.id),
       );
-
+      filteredUsers = filteredUsers.filter((user) => user.id !== id);
       let nonAdminUser;
       if (filteredUsers.length) {
         nonAdminUser = await this.prisma.channelUsers.createMany({
@@ -580,13 +580,15 @@ export class ChannelsService {
         throw new HttpException('DM 옵션 변경 불가', HttpStatus.BAD_REQUEST); // cannot change DM option
       if (updateData.password)
         updateData.password = await this.hashPassword(updateData.password);
-      const existingChannel = await this.prisma.channels.findUnique({
-        where: {
-          name: updateData.name,
-        },
-      });
-      if (existingChannel)
-        throw new HttpException('이미 존재하는 이름', HttpStatus.CONFLICT); //error: channel name already exists
+      if (updateData.name) {
+        const existingChannel = await this.prisma.channels.findUnique({
+          where: {
+            name: updateData.name,
+          },
+        });
+        if (existingChannel)
+          throw new HttpException('이미 존재하는 이름', HttpStatus.CONFLICT); //error: channel name already exists
+      }
       const updatedChannel = await this.prisma.channels.update({
         where: { id: channelId },
         data: updateData,
@@ -685,6 +687,44 @@ export class ChannelsService {
           channelId: channelId,
           userId: id,
           message: `${userName.name} 유저에게 관리자 권한 부여됨`,
+        };
+        users.forEach((user) => {
+          this.notificationGateway.sendNotificationToUser(
+            user.user_id,
+            payload,
+          );
+        });
+        return userState;
+      }
+      if (action === UserAction.RemoveAdmin) {
+        const user = await this.prisma.channelUsers.findUnique({
+          where: {
+            user_id_channel_id: {
+              user_id: id,
+              channel_id: channelId,
+            },
+          },
+        });
+        if (!user)
+          throw new HttpException('해당 유저 없음', HttpStatus.BAD_REQUEST);
+        if (admin.owner === false)
+          throw new HttpException('방장이 아님', HttpStatus.FORBIDDEN);
+        const userState = await this.prisma.channelUsers.update({
+          where: {
+            user_id_channel_id: {
+              user_id: id,
+              channel_id: channelId,
+            },
+          },
+          data: {
+            admin: false,
+          },
+        });
+        const payload: NotificationPayload = {
+          type: 'REMOVED_ADMIN',
+          channelId: channelId,
+          userId: id,
+          message: `${userName.name} 유저에게서 관리자 권한 제거됨`,
         };
         users.forEach((user) => {
           this.notificationGateway.sendNotificationToUser(

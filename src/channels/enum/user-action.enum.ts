@@ -4,4 +4,5 @@ export enum UserAction {
   Mute = 'MUTE',
   GiveAdmin = 'GIVEADMIN',
   UnBan = 'UNBAN',
+  RemoveAdmin = 'REMOVEADMIN',
 }
