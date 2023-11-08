@@ -33,6 +33,16 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: ExtendedSocket) {
+    const room = this.gameService.findRoomByPlayerId(client.user.sub);
+    const spectatorRoom = this.gameService.findRoomBySpectatorId(
+      client.user.sub,
+    );
+    if (room) {
+      this.gameService.cancelMatch(client, room.id.toString());
+    }
+    if (spectatorRoom) {
+      this.gameService.leaveAsSpectator(client, spectatorRoom.id.toString());
+    }
     console.log('user disconnected');
   }
 
