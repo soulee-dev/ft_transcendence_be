@@ -57,7 +57,7 @@ export class ChannelsService {
       console.error('Error getting channels:', error);
       throw new HttpException(
         '참여한 채팅방을 찾을 수 없음',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -121,7 +121,7 @@ export class ChannelsService {
       console.error('Error getting channels:', error);
       throw new HttpException(
         '공개 채팅방 불러오기 실패',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -136,7 +136,7 @@ export class ChannelsService {
       console.error('Error getting channelUsers', error);
       throw new HttpException(
         '채팅방 멤버 불러오기 실패',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -248,7 +248,7 @@ export class ChannelsService {
       console.error('Error getting channels:', error);
       throw new HttpException(
         '관리하는 채팅방 불러오기 실패',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
