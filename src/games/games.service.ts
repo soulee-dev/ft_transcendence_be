@@ -4,6 +4,7 @@ import { Server, Socket } from 'socket.io';
 import { ExtendedSocket } from '../auth/jwtWsGuard.interface';
 import { NotificationGateway } from '../notification/notification.gateway';
 import { NotificationPayload } from '../notification/notification-payload.interface';
+import { UsersService } from '../users/users.service';
 
 interface Player {
   socketID: string;
@@ -20,13 +21,18 @@ interface Ball {
   dy: number;
 }
 
+interface Spectator {
+  socketID: string;
+  userID: number;
+}
+
 interface Room {
   id: number;
   players: Player[];
   ball: Ball;
   winner: number;
   custom: boolean;
-  spectators?: number[];
+  spectators?: Spectator[];
 }
 
 @Injectable()
@@ -34,6 +40,7 @@ export class GamesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notification: NotificationGateway,
+    private readonly usersService: UsersService,
   ) {}
 
   private rooms: Room[] = [];
@@ -134,7 +141,13 @@ export class GamesService {
     return room;
   }
 
-  customGame(client: ExtendedSocket, userId: number) {
+  async customGame(client: ExtendedSocket, userId: number) {
+    const user = await this.usersService.getUser(userId);
+    if (user.status === 'in_game') {
+      throw new BadRequestException(
+        `게임 중에는 커스텀 게임을 할 수 없습니다.`,
+      );
+    }
     const room = this.createRoom(client, true);
     const payload: NotificationPayload = {
       type: 'INVITE_CUSTOM_GAME',
@@ -235,7 +248,41 @@ export class GamesService {
       let room: Room | undefined = this.rooms.find(
         (r) => r.players.length === 1 && !r.custom,
       );
-
+      const joinedRoom = this.rooms.find(
+        (r) =>
+          r.players.find((p) => p.playerNo === client.user.sub) !== undefined,
+      );
+      if (joinedRoom) {
+        const playerLength = joinedRoom.players.length;
+        if (playerLength === 1) {
+          this.rooms = this.rooms.filter((r) => r.id !== joinedRoom.id); // Remove the room
+          client.leave(joinedRoom.id.toString());
+          if (joinedRoom.spectators) {
+            joinedRoom.spectators.forEach((s) => {
+              const socket = this.server.sockets.sockets.get(s.socketID);
+              if (socket) {
+                socket.leave(joinedRoom.id.toString());
+              }
+            });
+          }
+        }
+        if (playerLength === 2) {
+          joinedRoom.players.forEach((p) => {
+            const socket = this.server.sockets.sockets.get(p.socketID);
+            if (socket) {
+              this.cancelMatch(socket, joinedRoom.id.toString());
+            }
+          });
+          if (joinedRoom.spectators) {
+            joinedRoom.spectators.forEach((s) => {
+              const socket = this.server.sockets.sockets.get(s.socketID);
+              if (socket) {
+                this.leaveAsSpectator(socket, joinedRoom.id.toString());
+              }
+            });
+          }
+        }
+      }
       if (room) {
         if (room.players[0].playerNo === client.user.sub) {
           throw new BadRequestException(`자기 자신과는 게임을 할 수 없습니다.`);
@@ -412,7 +459,12 @@ export class GamesService {
       if (room.spectators) {
         room.spectators.push(client.user.sub); // Add the client ID to the spectators array
       } else {
-        room.spectators = [client.user.sub];
+        room.spectators = [
+          {
+            socketID: client.id,
+            userID: client.user.sub,
+          },
+        ];
       }
       this.server.to(room.id.toString()).emit('spectatorJoined', {
         spectatorId: client.user.sub,
