@@ -40,6 +40,9 @@ export class BlockedService {
       if (!blockedUserId) {
         throw new BadRequestException(`${name} 유저 없음`);
       }
+      if (id === blockedUserId) {
+        throw new BadRequestException('자기 자신을 차단할 수 없습니다.');
+      }
 
       const existingBlocked = await this.prisma.blockedUsers.findUnique({
         where: {
