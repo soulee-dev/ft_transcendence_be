@@ -401,10 +401,11 @@ export class GamesService {
   }
 
   joinAsSpectator(client: ExtendedSocket, userId: string) {
+    console.log(this.rooms);
     const room = this.rooms.find(
       (room) =>
-        room.players[0].playerNo === parseInt(userId) ||
-        room.players[1].playerNo === parseInt(userId),
+        (room.players[0] && room.players[0].playerNo === parseInt(userId)) ||
+        (room.players[1] && room.players[1].playerNo === parseInt(userId)),
     );
     if (room) {
       client.join(room.id.toString());
