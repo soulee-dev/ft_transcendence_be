@@ -89,7 +89,7 @@ export class UsersService {
       });
     } catch (error) {
       console.error(error);
-      throw new BadRequestException(`유저 정보 수정 실패`);
+      throw error;
     }
   }
 
