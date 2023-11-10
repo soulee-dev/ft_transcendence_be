@@ -812,6 +812,16 @@ export class ChannelsService {
         const until = addMinutes(new Date(), 3);
 
         // Store the mute in the database with the expiration time
+        const existingMute = await this.prisma.channelMutes.findUnique({
+          where: {
+            channel_id_user_id: {
+              channel_id: channelId,
+              user_id: id,
+            }
+          }
+        })
+        if (existingMute)
+          throw new HttpException("이미 뮤트 함", HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelMutes.create({
           data: {
             channel_id: channelId,
