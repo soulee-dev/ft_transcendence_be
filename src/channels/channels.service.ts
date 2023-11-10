@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelOptions } from './enum/channel-options.enum';
@@ -343,6 +348,9 @@ export class ChannelsService {
 
     try {
       let editedName = name;
+      if (!/^[a-zA-Z0-9]*$/.test(editedName)) {
+        throw new BadRequestException('이름은 영어와 숫자만 포함해야 합니다');
+      }
       editedName = editedName.trim().replace(/\s+/g, ' ');
       if (!editedName ?? editedName === '')
         throw new HttpException(
@@ -552,6 +560,9 @@ export class ChannelsService {
     try {
       if (updateData.name) {
         let editedName = updateData.name;
+        if (!/^[a-zA-Z0-9]*$/.test(editedName)) {
+          throw new BadRequestException('이름은 영어와 숫자만 포함해야 합니다');
+        }
         updateData.name = editedName.trim().replace(/\s+/g, ' ');
         if (updateData.name.startsWith('DM:'))
           throw new HttpException(
