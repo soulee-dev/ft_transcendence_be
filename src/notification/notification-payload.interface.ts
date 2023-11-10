@@ -20,7 +20,8 @@ export interface NotificationPayload {
     | 'PUBLIC_CHANNEL_CREATED'
     | 'INVITE_CUSTOM_GAME'
     | 'DECLINED_YOUR_INVITE'
-    | 'LEFT_GAME';
+    | 'LEFT_GAME'
+    | 'USER_IN_GAME';
   channelId: number;
   userId: number;
   message: string;
