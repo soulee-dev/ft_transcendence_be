@@ -50,7 +50,7 @@ export class UsersService {
     try {
       if (userData.name) {
         let editedName = userData.name;
-        userData.name = editedName.trim().replace(/\s+/g, '');
+        userData.name = encodeURIComponent(editedName.trim().replace(/\s+/g, ''));
         if (userData.name.length === 0)
           throw new BadRequestException("적절한 이름을 입력하세요");
       }
