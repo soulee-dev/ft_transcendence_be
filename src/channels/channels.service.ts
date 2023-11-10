@@ -776,6 +776,16 @@ export class ChannelsService {
         if (admin.owner === false && user.admin === true)
           throw new HttpException('관리자 차단 불가', HttpStatus.FORBIDDEN);
         await this.handleUserDeparture(channelId, id);
+        const existingBan = await this.prisma.channelBans.findUnique({
+          where: {
+            channel_id_user_id: {
+              channel_id: channelId,
+              user_id: id,
+            }
+          }
+        });
+        if (existingBan)
+          throw new HttpException("이미 밴 함", HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
@@ -819,7 +829,7 @@ export class ChannelsService {
               user_id: id,
             }
           }
-        })
+        });
         if (existingMute)
           throw new HttpException("이미 뮤트 함", HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelMutes.create({
