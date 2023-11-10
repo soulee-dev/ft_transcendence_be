@@ -5,8 +5,8 @@ networks:
     driver: bridge
 
 services:
-  app:
-    build: .
+  nestjs-app:
+    build: ./backend
     environment:
       - NODE_ENV=production
     ports:
@@ -16,6 +16,16 @@ services:
       - redis
     networks:
       - transcendence
+  
+  nextjs-app:
+    build: ./frontend
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3001:3001"
+    networks:
+      - transcendence
+    command: npm start
 
   database:
     image: postgres
