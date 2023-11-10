@@ -141,8 +141,8 @@ export class GamesService {
     return room;
   }
 
-  async customGame(client: ExtendedSocket, userId: number) {
-    const user = await this.usersService.getUser(userId);
+  async customGame(client: ExtendedSocket, userId: string) {
+    const user = await this.usersService.getUser(parseInt(userId));
     if (user.status === 'in_game') {
       throw new BadRequestException(
         `게임 중에는 커스텀 게임을 할 수 없습니다.`,
@@ -155,7 +155,7 @@ export class GamesService {
       userId: client.user.sub,
       message: `커스텀 게임 초대가 왔습니다.`,
     };
-    this.notification.sendNotificationToUser(userId, payload);
+    this.notification.sendNotificationToUser(parseInt(userId), payload);
   }
 
   joinCustomGame(client: ExtendedSocket, roomID: string) {
