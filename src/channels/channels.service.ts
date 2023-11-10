@@ -282,7 +282,7 @@ export class ChannelsService {
         },
       });
       if (blocked) throw new HttpException('차단 당했음', HttpStatus.FORBIDDEN);
-      const existingDM = await this.prisma.channels.findFirst({
+      const existingDMByName = await this.prisma.channels.findFirst({
         where: {
           OR: [
             { name: 'DM: ' + creator.name + ', ' + user.name },
@@ -291,7 +291,7 @@ export class ChannelsService {
         },
       });
 
-      if (existingDM)
+      if (existingDMByName)
         throw new HttpException('이미 존재하는 DM', HttpStatus.BAD_REQUEST);
 
       const channel = await this.prisma.channels.create({
@@ -781,11 +781,11 @@ export class ChannelsService {
             channel_id_user_id: {
               channel_id: channelId,
               user_id: id,
-            }
-          }
+            },
+          },
         });
         if (existingBan)
-          throw new HttpException("이미 밴 함", HttpStatus.BAD_REQUEST);
+          throw new HttpException('이미 밴 함', HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
@@ -827,11 +827,11 @@ export class ChannelsService {
             channel_id_user_id: {
               channel_id: channelId,
               user_id: id,
-            }
-          }
+            },
+          },
         });
         if (existingMute)
-          throw new HttpException("이미 뮤트 함", HttpStatus.BAD_REQUEST);
+          throw new HttpException('이미 뮤트 함', HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelMutes.create({
           data: {
             channel_id: channelId,
