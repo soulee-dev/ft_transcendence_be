@@ -48,6 +48,10 @@ export class UsersService {
 
   async updateUser(id: number, userData: UpdateUserDto) {
     try {
+      if (!userData.name)
+      {
+        throw new BadRequestException("적절한 이름을 입력하세요");
+      }
       if (userData.name) {
         let editedName = userData.name.trim().replace(/\s+/g, '');
         // Check if the name contains only English letters and digits
