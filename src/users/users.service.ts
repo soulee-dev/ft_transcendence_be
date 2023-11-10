@@ -51,6 +51,8 @@ export class UsersService {
       if (userData.name) {
         let editedName = userData.name;
         userData.name = editedName.trim().replace(/\s+/g, '');
+        if (userData.name.length === 0)
+          throw new BadRequestException("적절한 이름을 입력하세요");
       }
       return await this.prisma.users.update({
         where: { id: id },
@@ -58,6 +60,8 @@ export class UsersService {
       });
     } catch (error) {
       console.error(error);
+      if (error)
+        throw error;
       throw new BadRequestException(`유저 정보 수정 실패`);
     }
   }
