@@ -358,8 +358,8 @@ export class GamesService {
       if (
         room.ball.x > 100 &&
         room.ball.x < 110 &&
-        room.ball.y > player1.y &&
-        room.ball.y < player1.y + 60
+        room.ball.y > player1.y - 10 &&
+        room.ball.y < player1.y + 70
       ) {
         room.ball.dx *= -1;
         this.adjustBallDirection(room.ball, player1.y, speed);
@@ -369,8 +369,8 @@ export class GamesService {
       if (
         room.ball.x > 680 &&
         room.ball.x < 690 &&
-        room.ball.y > player2.y &&
-        room.ball.y < player2.y + 60
+        room.ball.y > player2.y - 10 &&
+        room.ball.y < player2.y + 70
       ) {
         room.ball.dx *= -1;
         this.adjustBallDirection(room.ball, player2.y, speed);
