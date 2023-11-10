@@ -79,7 +79,7 @@ export class UsersService {
           const otherUserName = await this.getUser(channelUsers[0].user_id);
           await this.prisma.channels.update({
             where: { id: dmChannel.id },
-            data: { name: `DM: ${userData.name}, ${otherUserName}` },
+            data: { name: `DM: ${userData.name}, ${otherUserName.name}` },
           });
         }
       }
