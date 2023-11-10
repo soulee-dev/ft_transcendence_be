@@ -28,6 +28,7 @@ export class NotificationGateway
   server: Server;
 
   private activeUsers = new Set<number>();
+  
 
   @SubscribeMessage('joinNotificationChannel')
   handleJoinNotificationChannel(@ConnectedSocket() client: ExtendedSocket) {

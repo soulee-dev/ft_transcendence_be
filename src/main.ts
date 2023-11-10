@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as Sentry from '@sentry/node';
 import { ProfilingIntegration } from '@sentry/profiling-node';
+import { EventEmitter } from 'events';
+EventEmitter.defaultMaxListeners = 20; // Set your desired limit
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
