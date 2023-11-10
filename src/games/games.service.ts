@@ -272,12 +272,7 @@ export class GamesService {
           }
         }
         if (playerLength === 2) {
-          joinedRoom.players.forEach((p) => {
-            const socket = this.server.sockets.sockets.get(p.socketID);
-            if (socket) {
-              this.cancelMatch(socket, joinedRoom.id.toString());
-            }
-          });
+          this.cancelMatch(client, joinedRoom.id.toString());
           if (joinedRoom.spectators) {
             joinedRoom.spectators.forEach((s) => {
               const socket = this.server.sockets.sockets.get(s.socketID);
