@@ -12,7 +12,7 @@ import { UsersService } from 'src/users/users.service';
 @Module({
   imports: [
     JwtModule.register({
-      secret: 'YOUR_SECRET_KEY', // Choose a strong secret key
+      secret: process.env.YOUR_SECRET_KEY, // Choose a strong secret key
       signOptions: { expiresIn: '1h' }, // Token expiration time
     }),
     HttpModule,
