@@ -6,26 +6,26 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ChannelOptions } from '../enum/channel-options.enum';
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateChannelDto {
   @ApiProperty({
     description: 'The name of the channel',
     example: 'General',
-    maxLength: 25,
+    maxLength: 255,
   })
   @IsString()
-  @MaxLength(25)
+  @MaxLength(255)
   name: string;
 
   @ApiProperty({
     description: 'The password for the channel (if private)',
     example: 'securePassword',
-    maxLength: 25,
+    maxLength: 255,
     required: false,
   })
   @IsString()
-  @MaxLength(25)
+  @MaxLength(255)
   password?: string;
 
   @ApiProperty({

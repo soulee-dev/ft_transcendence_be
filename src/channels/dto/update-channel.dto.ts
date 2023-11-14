@@ -8,20 +8,20 @@ export class UpdateChannelDto extends PartialType(CreateChannelDto) {
   @ApiProperty({
     description: 'The new name of the channel',
     example: 'UpdatedChannel',
-    maxLength: 25,
+    maxLength: 255,
     required: false,
   })
   @IsString()
-  @MaxLength(25)
+  @MaxLength(255)
   name?: string;
 
   @ApiProperty({
     description: 'The new password for the channel',
     example: 'UpdatedPassword',
-    maxLength: 25,
+    maxLength: 255,
     required: false,
   })
   @IsString()
-  @MaxLength(25)
+  @MaxLength(255)
   password?: string;
 }
